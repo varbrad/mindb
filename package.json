@@ -12,6 +12,7 @@
     "mongodb",
     "mongo",
     "schema",
+    "query",
     "document",
     "db",
     "data"
