@@ -1,0 +1,25 @@
+{
+  "name": "mindb",
+  "version": "0.0.1",
+  "description": "Schema-based document-oriented database for JavaScript.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varbrad/mindb.git"
+  },
+  "keywords": [
+    "database",
+    "nosql",
+    "mongodb",
+    "mongo",
+    "schema",
+    "document",
+    "db",
+    "data"
+  ],
+  "author": "Brad Davies",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/varbrad/mindb/issues"
+  },
+  "homepage": "https://github.com/varbrad/mindb#readme"
+}
