@@ -11,6 +11,7 @@
     "build:umd": "rollup --config config/rollup.umd.js",
     "build:cjs": "rollup --config config/rollup.cjs.js",
     "build:esm": "rollup --config config/rollup.esm.js",
+    "build": "npm run build:src && npm run build:umd && npm run build:cjs && npm run build:esm",
     "test": "mocha"
   },
   "keywords": [
