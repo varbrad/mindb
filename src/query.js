@@ -79,6 +79,17 @@ class Query {
     return new Query(this._collection, q)
   }
 
+  populate (...keys) {
+    // Is this collection defined by a schema?
+    if (this._collection.schema) {
+      console.log('schema present!')
+    }
+    // Which keys should be populated
+    let q = _.cloneDeep(this._query)
+    q.populate = keys
+    return new Query(this._collection, q)
+  }
+
   exec (collection) {
     // Quick return if set byId
     if (this._query.byId) return this._collection._documents[this._query.byId]

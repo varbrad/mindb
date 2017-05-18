@@ -1,9 +1,10 @@
 const Collection = require('./collection')
 
 class Database {
-  constructor (name) {
+  constructor (name, options) {
     this._name = name
     this._collections = {}
+    this._options = options
   }
 
   /**

@@ -12,4 +12,4 @@ cool.insert({ _id: 'kevin', data: 33, o: [3, 2, 1] })
 cool.insert({ _id: 'bob', data: 44, o: [4, 1, 5] })
 cool.insert({ _id: 'ke', data: 44, o: [4, 3] })
 
-console.log(cool.find().filter(d => d.data).sort('-o', '+data').exec())
+console.log(cool.find().filter(d => d.data).sort('-o', '+data').populate().exec())
