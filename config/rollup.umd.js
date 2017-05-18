@@ -1,11 +1,13 @@
 const babel = require('rollup-plugin-babel')
+const uglify = require('rollup-plugin-uglify')
 
 export default {
-  entry: 'dist/es6/mindb.js',
+  entry: 'dist/es2017/mindb.js',
   format: 'umd',
-  dest: 'dist/umd/mindb.js',
+  dest: 'dist/mindb.min.js',
   moduleName: 'mindb',
   plugins: [
-    babel()
+    babel(),
+    uglify()
   ]
 }
