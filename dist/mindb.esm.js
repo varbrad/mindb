@@ -39,9 +39,11 @@ function createDatabaseProxy(name) {
 var MinDB = function () {
     function MinDB() {
         classCallCheck(this, MinDB);
+
+        this._databases = {};
     }
 
-    createClass(MinDB, null, [{
+    createClass(MinDB, [{
         key: 'create',
         value: function create(name) {
             // Is there already a database with this name?
@@ -57,4 +59,14 @@ var MinDB = function () {
     return MinDB;
 }();
 
-export default MinDB;
+var mindb = new Proxy(new MinDB(), {
+    get: function get$$1(target, name) {
+        if (name in target) return target[name];
+        if (name in target._databases) return target._databases[name];
+    },
+    set: function set$$1(obj, prop, val) {
+        throw new Error('Do not dynamically set vales on MinDB.');
+    }
+});
+
+export default mindb;

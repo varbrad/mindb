@@ -11,10 +11,10 @@
   },
   "scripts": {
     "build:src": "tsc",
-    "build:umd": "rollup --config config/rollup.umd.js",
+    "build:min": "rollup --config config/rollup.min.js",
     "build:cjs": "rollup --config config/rollup.cjs.js",
     "build:esm": "rollup --config config/rollup.esm.js",
-    "build": "npm run build:src && npm run build:umd && npm run build:cjs && npm run build:esm",
+    "build": "npm run build:src && npm run build:min && npm run build:cjs && npm run build:esm",
     "test": "mocha"
   },
   "keywords": [

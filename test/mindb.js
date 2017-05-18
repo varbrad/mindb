@@ -2,7 +2,7 @@
 
 const expect = require('unexpected')
 
-const MinDB = require('../dist/umd/mindb.js')
+const MinDB = require('../dist/mindb.cjs.js')
 
 describe('MinDB', () => {
   it('Should exist', () => {
