@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "removeComments": false,
-    "target": "es6",
-    "outDir": "./dist/es6"
+    "target": "es2017",
+    "outDir": "./dist/es2017"
   },
   "include": [
     "./src/*.ts"
