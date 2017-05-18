@@ -6,21 +6,21 @@ class Query {
    * @param {Query} query The query to chain from.
    */
   constructor (collection, query) {
-    this.collection = collection
-    this.query = query || {}
+    this._collection = collection
+    this._query = query || {}
   }
 
   byId (value) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.byId = value
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
   }
 
   where (key) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.action = 'where'
     q.key = key
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
   }
 
   gt (value) {
@@ -35,27 +35,38 @@ class Query {
     return this.op('===', value)
   }
 
+  ne (value) {
+    return this.op('!==', value)
+  }
+
   op (op, value) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.filters = q.filters || []
     q.filters.push({ key: q.key, value: value, op: op })
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
+  }
+
+  filter (f) {
+    let q = _.cloneDeep(this._query)
+    q.defaultFilters = q.defaultFilters || []
+    q.defaultFilters.push(f)
+    return new Query(this._collection, q)
   }
 
   sort (...keys) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.sort = []
     keys.forEach(key => {
       const order = key[0] === '-' ? -1 : 1
       q.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order })
     })
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
   }
 
   limit (n) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.limit = n
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
   }
 
   one () {
@@ -63,33 +74,40 @@ class Query {
   }
 
   select (...keys) {
-    let q = _.cloneDeep(this.query)
+    let q = _.cloneDeep(this._query)
     q.select = keys
-    return new Query(this.collection, q)
+    return new Query(this._collection, q)
   }
 
   exec (collection) {
     // Quick return if set byId
-    if (this.query.byId) return this.collection._documents[this.query.byId]
+    if (this._query.byId) return this._collection._documents[this._query.byId]
 
-    let c = _.values((collection && collection._documents) || this.collection._documents)
-    if (this.query.filters) {
+    let c = _.values((collection && collection._documents) || this._collection._documents)
+    // Run default filters first, because they are a little faster
+    if (this._query.defaultFilters) {
+      this._query.defaultFilters.forEach(filter => {
+        c = c.filter(filter)
+      })
+    }
+    if (this._query.filters) {
       // Apply filters
-      this.query.filters.forEach(filter => {
+      this._query.filters.forEach(filter => {
         c = c.filter(o => {
           switch (filter.op) {
             case '>': return o[filter.key] > filter.value
             case '<': return o[filter.key] < filter.value
             case '===': return o[filter.key] === filter.value
+            case '!==': return o[filter.key] !== filter.value
           }
         })
       })
     }
-    if (this.query.sort) {
+    if (this._query.sort) {
       c = c.sort((a, b) => {
         let r = 0
-        for (let i = 0; i < this.query.sort.length; ++i) {
-          const s = this.query.sort[i]
+        for (let i = 0; i < this._query.sort.length; ++i) {
+          const s = this._query.sort[i]
           const _a = a[s.key]
           const _b = b[s.key]
           if (_a !== _b) {
@@ -106,15 +124,15 @@ class Query {
         return r
       })
     }
-    if (this.query.limit) {
-      c = c.slice(0, this.query.limit > c.length ? c.length : this.query.limit)
+    if (this._query.limit) {
+      c = c.slice(0, this._query.limit > c.length ? c.length : this._query.limit)
     }
 
     // Select specific columns only
-    if (this.query.select) {
+    if (this._query.select) {
       c = c.map(row => {
         let o = {}
-        this.query.select.forEach(key => {
+        this._query.select.forEach(key => {
           o[key] = row[key]
         })
         return o
@@ -122,7 +140,7 @@ class Query {
     }
 
     // Single object if limited to 1
-    if (this.query.limit === 1 && c.length === 1) {
+    if (this._query.limit === 1 && c.length === 1) {
       c = c[0]
     }
     return c
