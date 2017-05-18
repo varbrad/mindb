@@ -22,5 +22,11 @@
   "bugs": {
     "url": "https://github.com/varbrad/mindb/issues"
   },
-  "homepage": "https://github.com/varbrad/mindb#readme"
+  "homepage": "https://github.com/varbrad/mindb#readme",
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "faker": "^4.1.0"
+  }
 }
