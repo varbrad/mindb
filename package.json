@@ -2,6 +2,9 @@
   "name": "mindb",
   "version": "0.0.1",
   "description": "Schema-based document-oriented database for JavaScript.",
+  "main": "dist/mindb.cjs.js",
+  "module": "dist/mindb.esm.js",
+  "unpkg": "dist/mindb.min.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/varbrad/mindb.git"
