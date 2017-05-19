@@ -55,7 +55,213 @@ var Query = function () {
         value: function byId(id) {
             var data = clone(this._data, false);
             data.byId = id;
-            return data;
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'eq',
+        value: function eq(value) {
+            return this.op('===', value);
+        }
+    }, {
+        key: 'exec',
+        value: function exec() {
+            var q = this._data;
+            var c = void 0;
+            // By ID fetch or whole search
+            if (q.byId) {
+                c = [this._collection.get(q.byId)];
+            } else {
+                c = this._collection.values();
+                // Run JS filters
+                if (q.filters) {
+                    q.filters.forEach(function (filter) {
+                        c = c.filter(filter);
+                    });
+                }
+                // Run wheres
+                if (q.wheres) {
+                    q.wheres.forEach(function (data) {
+                        c = c.filter(function (doc) {
+                            switch (data.op) {
+                                case '>':
+                                    return doc[data.key] > data.value;
+                                case '<':
+                                    return doc[data.key] < data.value;
+                                case '>=':
+                                    return doc[data.key] >= data.value;
+                                case '<=':
+                                    return doc[data.key] <= data.value;
+                                case '===':
+                                    return doc[data.key] === data.value;
+                                case '!==':
+                                    return doc[data.key] !== data.value;
+                            }
+                        });
+                    });
+                }
+                // Run sorts
+                if (q.sort) {
+                    c = c.sort(function (a, b) {
+                        var r = 0;
+                        q.sort.every(function (sort) {
+                            // Get document values
+                            var _a = a[sort.key];
+                            var _b = b[sort.key];
+                            // If the values are different
+                            if (_a !== _b) {
+                                // If numbers, use number sorting comparison
+                                if (typeof _a === 'number' && typeof _b === 'number') r = (_a - _b) * sort.order;else r = (_a > _b ? 1 : -1) * sort.order;
+                                // Return false, we don't need to sort on further keys
+                                return false;
+                            } else {
+                                // We will need to sort on the next key, as the values were equal
+                                return true;
+                            }
+                        });
+                        // Return the resulting sort value
+                        return r;
+                    });
+                }
+                // Limit & Offset
+                if (q.limit || q.offset) {
+                    c = c.slice(q.offset || 0, (q.offset || 0) + (q.limit || c.length));
+                }
+            }
+            // Return the result set
+            return q.limit === 1 || q.byId ? c[0] : c;
+        }
+    }, {
+        key: 'exists',
+        value: function exists() {
+            return this.op('!==', undefined);
+        }
+    }, {
+        key: 'filter',
+        value: function filter(f) {
+            var data = clone(this._data, false);
+            data.filters = data.filters || [];
+            data.filters.push(f);
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'gt',
+        value: function gt(value) {
+            return this.op('>', value);
+        }
+    }, {
+        key: 'gte',
+        value: function gte(value) {
+            return this.op('>=', value);
+        }
+    }, {
+        key: 'limit',
+        value: function limit(m) {
+            var data = clone(this._data, false);
+            data.limit = m;
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'lt',
+        value: function lt(value) {
+            return this.op('<', value);
+        }
+    }, {
+        key: 'lte',
+        value: function lte(value) {
+            return this.op('<=', value);
+        }
+    }, {
+        key: 'ne',
+        value: function ne(value) {
+            return this.op('!==', value);
+        }
+    }, {
+        key: 'neg',
+        value: function neg() {
+            return this.op('<', 0);
+        }
+    }, {
+        key: 'negative',
+        value: function negative() {
+            return this.neg();
+        }
+    }, {
+        key: 'not',
+        value: function not(value) {
+            return this.ne(value);
+        }
+    }, {
+        key: 'offset',
+        value: function offset(n) {
+            var data = clone(this._data, false);
+            data.offset = n;
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'one',
+        value: function one() {
+            return this.limit(1);
+        }
+    }, {
+        key: 'op',
+        value: function op(_op, value) {
+            var data = clone(this._data, false);
+            data.wheres = data.wheres || [];
+            data.wheres.push({ key: data.key, value: value, op: _op });
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'populate',
+        value: function populate() {
+            // Do we actually have a schema for this collection
+            if (!this._collection.schema) throw new Error('Cannot populate document without a defined schema for \'' + this._collection.schema + '\'.');
+            var data = clone(this._data, false);
+
+            for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
+                keys[_key] = arguments[_key];
+            }
+
+            data.populate = keys;
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'pos',
+        value: function pos() {
+            return this.op('>', 0);
+        }
+    }, {
+        key: 'positive',
+        value: function positive() {
+            return this.pos();
+        }
+    }, {
+        key: 'sort',
+        value: function sort() {
+            var data = clone(this._data, false);
+            data.sort = [];
+
+            for (var _len2 = arguments.length, keys = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                keys[_key2] = arguments[_key2];
+            }
+
+            keys.forEach(function (key) {
+                var order = key[0] === '-' ? -1 : 1;
+                data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order });
+            });
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'within',
+        value: function within(min, max) {
+            return this.op('>=', min).op('<=', max);
+        }
+    }, {
+        key: 'where',
+        value: function where(key) {
+            var data = clone(this._data, false);
+            data.action = 'where';
+            data.key = key;
+            return new Query(this._collection, data);
         }
     }]);
     return Query;
@@ -66,8 +272,8 @@ var Collection = function () {
         classCallCheck(this, Collection);
 
         this._database = database;
-        this._name = name;
-        this._schema = schema;
+        this.name = name;
+        this.schema = schema;
         this._documents = {};
     }
 
@@ -80,9 +286,8 @@ var Collection = function () {
         key: 'findOne',
         value: function findOne(id) {
             // Ensure the id is a string
-            if (typeof id !== 'string') throw new Error('The document is must be a "string", not a "' + (typeof id === 'undefined' ? 'undefined' : _typeof(id)) + '".');
-            var q = this.find();
-            return q;
+            if (id && typeof id !== 'string') throw new Error('The document is must be a "string", not a "' + (typeof id === 'undefined' ? 'undefined' : _typeof(id)) + '".');
+            if (id) return this.find().byId(id);else return this.find().limit(1);
         }
     }, {
         key: 'get',
@@ -108,7 +313,7 @@ var Collection = function () {
                 if (document._id === word) throw new Error('The document _id \'' + document._id + '\' is an internal reserved name and cannot be used.');
             });
             // Is this _id already in the collection?
-            if (!overwrite && document._id in this._documents) throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this._name + '\' collection.');
+            if (!overwrite && document._id in this._documents) throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this.name + '\' collection.');
             // Add the document
             this._documents[document._id] = document;
             // Return the document
@@ -124,11 +329,20 @@ var Collection = function () {
         value: function upsert(document) {
             return this.insert(document, true);
         }
+    }, {
+        key: 'values',
+        value: function values() {
+            var _this = this;
+
+            return Object.keys(this._documents).map(function (k) {
+                return _this._documents[k];
+            });
+        }
     }]);
     return Collection;
 }();
 
-Collection._RESERVED = ['_database', '_name', '_schema', '_documents', 'get', 'insert', 'list', 'upsert'];
+Collection._RESERVED = ['_RESERVED', 'name', 'schema', '_database', '_documents', 'get', 'insert', 'list', 'upsert', 'values'];
 function createCollectionProxy(database, name, schema) {
     var col = new Collection(database, name, schema);
     return new Proxy(col, {
@@ -143,7 +357,7 @@ var Database = function () {
     function Database(name, options) {
         classCallCheck(this, Database);
 
-        this._name = name;
+        this.name = name;
         this._collections = {};
         this._options = options;
     }
@@ -158,7 +372,7 @@ var Database = function () {
                 if (name === word) throw new Error('Collection name \'' + name + '\' is an internal reserved name and cannot be used.');
             });
             // Is there already a database with this name?
-            if (name in this._collections) throw new Error('A collection with name \'' + name + '\' already exists on database \'' + this._name + '\'.');
+            if (name in this._collections) throw new Error('A collection with name \'' + name + '\' already exists on database \'' + this.name + '\'.');
             // Create the collection
             var col = createCollectionProxy(this, name, schema);
             this._collections[name] = col;
@@ -173,7 +387,7 @@ var Database = function () {
             // Return the col if it exists
             if (name in this._collections) return this._collections[name];
             // Else throw an error
-            throw new Error('Collection name \'' + name + '\' has not been created and does not exist on database \'' + this._name + '\'.');
+            throw new Error('Collection name \'' + name + '\' has not been created and does not exist on database \'' + this.name + '\'.');
         }
     }, {
         key: 'list',
@@ -184,7 +398,7 @@ var Database = function () {
     return Database;
 }();
 
-Database._RESERVED = ['_collections', '_name', '_options', 'collection', 'get', 'list'];
+Database._RESERVED = ['_RESERVED', 'name', '_collections', '_options', 'collection', 'get', 'list'];
 function createDatabaseProxy(name, options) {
     var db = new Database(name, options);
     return new Proxy(db, {
@@ -242,17 +456,18 @@ var MinDB = function () {
     return MinDB;
 }();
 
-MinDB._RESERVED = ['_databases', 'create', 'get', 'list'];
+MinDB._RESERVED = ['_RESERVED', '_databases', 'create', 'get', 'list'];
+
 // Export the proxied class
-var mindb = new Proxy(new MinDB(), {
-    get: function get$$1(target, name) {
+var main = new Proxy(new MinDB(), {
+    get: function get(target, name) {
         if (name in target) return target[name];
         // Return database if name is a string and found within the database list
         if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
     },
-    set: function set$$1(obj, prop, val) {
+    set: function set(obj, prop, val) {
         throw new Error('Do not dynamically set values on MinDB.');
     }
 });
 
-module.exports = mindb;
+module.exports = main;

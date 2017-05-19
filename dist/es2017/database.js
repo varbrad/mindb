@@ -1,7 +1,7 @@
 import { createCollectionProxy } from './collection';
 class Database {
     constructor(name, options) {
-        this._name = name;
+        this.name = name;
         this._collections = {};
         this._options = options;
     }
@@ -16,7 +16,7 @@ class Database {
         });
         // Is there already a database with this name?
         if (name in this._collections)
-            throw new Error(`A collection with name '${name}' already exists on database '${this._name}'.`);
+            throw new Error(`A collection with name '${name}' already exists on database '${this.name}'.`);
         // Create the collection
         const col = createCollectionProxy(this, name, schema);
         this._collections[name] = col;
@@ -31,15 +31,16 @@ class Database {
         if (name in this._collections)
             return this._collections[name];
         // Else throw an error
-        throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this._name}'.`);
+        throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this.name}'.`);
     }
     list() {
         return Object.keys(this._collections);
     }
 }
 Database._RESERVED = [
+    '_RESERVED',
+    'name',
     '_collections',
-    '_name',
     '_options',
     'collection',
     'get',

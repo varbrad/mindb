@@ -2,8 +2,8 @@ import { Query } from './query';
 class Collection {
     constructor(database, name, schema) {
         this._database = database;
-        this._name = name;
-        this._schema = schema;
+        this.name = name;
+        this.schema = schema;
         this._documents = {};
     }
     find() {
@@ -11,10 +11,12 @@ class Collection {
     }
     findOne(id) {
         // Ensure the id is a string
-        if (typeof id !== 'string')
+        if (id && typeof id !== 'string')
             throw new Error(`The document is must be a "string", not a "${typeof id}".`);
-        let q = this.find();
-        return q;
+        if (id)
+            return this.find().byId(id);
+        else
+            return this.find().limit(1);
     }
     get(id) {
         // Check the id is actually a string
@@ -40,7 +42,7 @@ class Collection {
         });
         // Is this _id already in the collection?
         if (!overwrite && document._id in this._documents)
-            throw new Error(`The document _id '${document._id}' already exists within the '${this._name}' collection.`);
+            throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`);
         // Add the document
         this._documents[document._id] = document;
         // Return the document
@@ -52,16 +54,21 @@ class Collection {
     upsert(document) {
         return this.insert(document, true);
     }
+    values() {
+        return Object.keys(this._documents).map(k => this._documents[k]);
+    }
 }
 Collection._RESERVED = [
+    '_RESERVED',
+    'name',
+    'schema',
     '_database',
-    '_name',
-    '_schema',
     '_documents',
     'get',
     'insert',
     'list',
-    'upsert'
+    'upsert',
+    'values'
 ];
 function createCollectionProxy(database, name, schema) {
     const col = new Collection(database, name, schema);
