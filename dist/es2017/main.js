@@ -9,6 +9,10 @@ export default new Proxy(new MinDB(), {
             return target.get(name);
     },
     set(obj, prop, val) {
+        if (prop in obj) {
+            obj[prop] = val;
+            return true;
+        }
         throw new Error(`Do not dynamically set values on MinDB.`);
     }
 });

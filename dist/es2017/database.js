@@ -57,7 +57,11 @@ function createDatabaseProxy(name, options) {
                 return target.get(name);
         },
         set(obj, prop, val) {
-            throw new Error(`Do not dynamically set values on a MinDB.Database instance.`);
+            if (prop in obj) {
+                obj[prop] = val;
+                return true;
+            }
+            throw new Error(`Do not dynamically set values on MinDB.Database.`);
         }
     });
 }

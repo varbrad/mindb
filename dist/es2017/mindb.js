@@ -1,6 +1,11 @@
-import { createDatabaseProxy } from './database';
+import { Database, createDatabaseProxy } from './database';
+import { Collection } from './collection';
+import { Query } from './query';
 class MinDB {
     constructor() {
+        this.Database = Database;
+        this.Collection = Collection;
+        this.Query = Query;
         this._databases = {};
     }
     create(name) {
@@ -24,7 +29,7 @@ class MinDB {
     get(name) {
         // Check the name is actually a string
         if (typeof name !== 'string')
-            throw new Error(`The database name must be a "string", "not a "${typeof name}".`);
+            throw new Error(`The database name must be a "string", not a "${typeof name}".`);
         // Return the db if it exists
         if (name in this._databases)
             return this._databases[name];
@@ -34,12 +39,28 @@ class MinDB {
     list() {
         return Object.keys(this._databases);
     }
+    reset(name) {
+        if (name) {
+            if (typeof name !== 'string')
+                throw new Error(`The database name must be a "string", not a "${typeof name}".`);
+            if (!(name in this._databases))
+                throw new Error(`Database name '${name}' does not exist and cannot be reset.`);
+            delete this._databases[name];
+        }
+        else {
+            this._databases = {};
+        }
+    }
 }
 MinDB._RESERVED = [
+    'Database',
+    'Collection',
+    'Query',
     '_RESERVED',
     '_databases',
     'create',
     'get',
-    'list'
+    'list',
+    'reset'
 ];
 export { MinDB };

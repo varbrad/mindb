@@ -276,6 +276,11 @@ var Collection = function () {
     }
 
     createClass(Collection, [{
+        key: 'empty',
+        value: function empty() {
+            this._documents = {};
+        }
+    }, {
         key: 'find',
         value: function find() {
             return new Query(this);
@@ -347,6 +352,13 @@ function createCollectionProxy(database, name, schema) {
         get: function get$$1(target, name) {
             if (name in target) return target[name];
             if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get[name];
+        },
+        set: function set$$1(obj, prop, val) {
+            if (prop in obj) {
+                obj[prop] = val;
+                return true;
+            }
+            throw new Error('Do not dynamically set values on MinDB.Collection.');
         }
     });
 }
@@ -406,7 +418,11 @@ function createDatabaseProxy(name, options) {
             if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
         },
         set: function set$$1(obj, prop, val) {
-            throw new Error('Do not dynamically set values on a MinDB.Database instance.');
+            if (prop in obj) {
+                obj[prop] = val;
+                return true;
+            }
+            throw new Error('Do not dynamically set values on MinDB.Database.');
         }
     });
 }
@@ -415,6 +431,9 @@ var MinDB = function () {
     function MinDB() {
         classCallCheck(this, MinDB);
 
+        this.Database = Database;
+        this.Collection = Collection;
+        this.Query = Query;
         this._databases = {};
     }
 
@@ -439,7 +458,7 @@ var MinDB = function () {
         key: 'get',
         value: function get$$1(name) {
             // Check the name is actually a string
-            if (typeof name !== 'string') throw new Error('The database name must be a "string", "not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            if (typeof name !== 'string') throw new Error('The database name must be a "string", not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
             // Return the db if it exists
             if (name in this._databases) return this._databases[name];
             // Else throw an error
@@ -450,11 +469,22 @@ var MinDB = function () {
         value: function list() {
             return Object.keys(this._databases);
         }
+    }, {
+        key: 'reset',
+        value: function reset(name) {
+            if (name) {
+                if (typeof name !== 'string') throw new Error('The database name must be a "string", not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+                if (!(name in this._databases)) throw new Error('Database name \'' + name + '\' does not exist and cannot be reset.');
+                delete this._databases[name];
+            } else {
+                this._databases = {};
+            }
+        }
     }]);
     return MinDB;
 }();
 
-MinDB._RESERVED = ['_RESERVED', '_databases', 'create', 'get', 'list'];
+MinDB._RESERVED = ['Database', 'Collection', 'Query', '_RESERVED', '_databases', 'create', 'get', 'list', 'reset'];
 
 // Export the proxied class
 var main = new Proxy(new MinDB(), {
@@ -464,6 +494,10 @@ var main = new Proxy(new MinDB(), {
         if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
     },
     set: function set(obj, prop, val) {
+        if (prop in obj) {
+            obj[prop] = val;
+            return true;
+        }
         throw new Error('Do not dynamically set values on MinDB.');
     }
 });

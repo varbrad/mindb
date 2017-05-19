@@ -1,6 +1,6 @@
 {
   "name": "mindb",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Schema-based document-oriented database for JavaScript.",
   "main": "dist/mindb.cjs.js",
   "module": "dist/mindb.esm.js",
@@ -16,7 +16,7 @@
     "build:cjs": "rollup --config config/rollup.cjs.js",
     "build:esm": "rollup --config config/rollup.esm.js",
     "build": "npm run build:src && npm run build:min && npm run build:cjs && npm run build:esm",
-    "test": "mocha"
+    "test": "mocha ./test/main.js"
   },
   "keywords": [
     "database",
