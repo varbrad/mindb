@@ -8,7 +8,7 @@ describe('MinDB', () => {
   it('Should exist', () => {
     expect(MinDB, 'to be defined')
   })
-
-  describe('create()', () => {
+  it('Should have a public "create" method', () => {
+    expect(MinDB, 'to have property', 'create')
   })
 })

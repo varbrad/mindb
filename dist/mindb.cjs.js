@@ -1,5 +1,21 @@
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -24,16 +40,161 @@ var createClass = function () {
   };
 }();
 
-var Database = function Database(name) {
-    classCallCheck(this, Database);
-};
+var clone = require('clone');
 
-function createDatabaseProxy(name) {
-    var db = new Database(name);
+var Query = function () {
+    function Query(collection, data) {
+        classCallCheck(this, Query);
+
+        this._collection = collection;
+        this._data = data || {};
+    }
+
+    createClass(Query, [{
+        key: 'byId',
+        value: function byId(id) {
+            var data = clone(this._data, false);
+            data.byId = id;
+            return data;
+        }
+    }]);
+    return Query;
+}();
+
+var Collection = function () {
+    function Collection(database, name, schema) {
+        classCallCheck(this, Collection);
+
+        this._database = database;
+        this._name = name;
+        this._schema = schema;
+        this._documents = {};
+    }
+
+    createClass(Collection, [{
+        key: 'find',
+        value: function find() {
+            return new Query(this);
+        }
+    }, {
+        key: 'findOne',
+        value: function findOne(id) {
+            // Ensure the id is a string
+            if (typeof id !== 'string') throw new Error('The document is must be a "string", not a "' + (typeof id === 'undefined' ? 'undefined' : _typeof(id)) + '".');
+            var q = this.find();
+            return q;
+        }
+    }, {
+        key: 'get',
+        value: function get$$1(id) {
+            // Check the id is actually a string
+            if (typeof id !== 'string') throw new Error('The document id must be a "string", not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Return the object if it exists
+            if (id in this._documents) return this._documents[id];
+            // Else return undefined, don't throw an error
+            return undefined;
+        }
+    }, {
+        key: 'insert',
+        value: function insert(document) {
+            var overwrite = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            // Does the document have an _id?
+            if (!document._id) throw new Error('The document to be inserted has no \'_id\'.');
+            // Ensure the _id is a string
+            if (typeof document._id !== 'string') throw new Error('A document must have a "string" _id, not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Avoid reserved words
+            Collection._RESERVED.forEach(function (word) {
+                if (document._id === word) throw new Error('The document _id \'' + document._id + '\' is an internal reserved name and cannot be used.');
+            });
+            // Is this _id already in the collection?
+            if (!overwrite && document._id in this._documents) throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this._name + '\' collection.');
+            // Add the document
+            this._documents[document._id] = document;
+            // Return the document
+            return document;
+        }
+    }, {
+        key: 'list',
+        value: function list() {
+            return Object.keys(this._documents);
+        }
+    }, {
+        key: 'upsert',
+        value: function upsert(document) {
+            return this.insert(document, true);
+        }
+    }]);
+    return Collection;
+}();
+
+Collection._RESERVED = ['_database', '_name', '_schema', '_documents', 'get', 'insert', 'list', 'upsert'];
+function createCollectionProxy(database, name, schema) {
+    var col = new Collection(database, name, schema);
+    return new Proxy(col, {
+        get: function get$$1(target, name) {
+            if (name in target) return target[name];
+            if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get[name];
+        }
+    });
+}
+
+var Database = function () {
+    function Database(name, options) {
+        classCallCheck(this, Database);
+
+        this._name = name;
+        this._collections = {};
+        this._options = options;
+    }
+
+    createClass(Database, [{
+        key: 'collection',
+        value: function collection(name, schema) {
+            // Check the name is actually a string
+            if (typeof name !== 'string') throw new Error('The collection name must be a "string", not "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Can't call it any of the reserved names
+            Database._RESERVED.forEach(function (word) {
+                if (name === word) throw new Error('Collection name \'' + name + '\' is an internal reserved name and cannot be used.');
+            });
+            // Is there already a database with this name?
+            if (name in this._collections) throw new Error('A collection with name \'' + name + '\' already exists on database \'' + this._name + '\'.');
+            // Create the collection
+            var col = createCollectionProxy(this, name, schema);
+            this._collections[name] = col;
+            // Return the collection ref
+            return col;
+        }
+    }, {
+        key: 'get',
+        value: function get$$1(name) {
+            // Check the name is actually a string
+            if (typeof name !== 'string') throw new Error('The collection name must be a "string", "not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Return the col if it exists
+            if (name in this._collections) return this._collections[name];
+            // Else throw an error
+            throw new Error('Collection name \'' + name + '\' has not been created and does not exist on database \'' + this._name + '\'.');
+        }
+    }, {
+        key: 'list',
+        value: function list() {
+            return Object.keys(this._collections);
+        }
+    }]);
+    return Database;
+}();
+
+Database._RESERVED = ['_collections', '_name', '_options', 'collection', 'get', 'list'];
+function createDatabaseProxy(name, options) {
+    var db = new Database(name, options);
     return new Proxy(db, {
         get: function get$$1(target, name) {
             if (name in target) return target[name];
-            if (name in target._collections) return target._collections[name];
+            // Return collection if name is a string and found within the collections list
+            if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
+        },
+        set: function set$$1(obj, prop, val) {
+            throw new Error('Do not dynamically set values on a MinDB.Database instance.');
         }
     });
 }
@@ -48,26 +209,49 @@ var MinDB = function () {
     createClass(MinDB, [{
         key: 'create',
         value: function create(name) {
+            // Check the name is actually a string
+            if (typeof name !== 'string') throw new Error('The database name must be a "string", not "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Can't call it any of the reserved names
+            MinDB._RESERVED.forEach(function (word) {
+                if (name === word) throw new Error('Database name \'' + name + '\' is an internal reserved name and cannot be used.');
+            });
             // Is there already a database with this name?
             if (name in this._databases) throw new Error('A database with name \'' + name + '\' already exists.');
-            // Can't call it "_databases" because of reasons
-            if (name === '_databases') throw new Error('Database name \'_databases\' is an internal reserved name and cannot be used.');
             // Create the database
             var db = createDatabaseProxy(name);
             this._databases[name] = db;
+            // Return the database ref
             return db;
+        }
+    }, {
+        key: 'get',
+        value: function get$$1(name) {
+            // Check the name is actually a string
+            if (typeof name !== 'string') throw new Error('The database name must be a "string", "not a "' + (typeof name === 'undefined' ? 'undefined' : _typeof(name)) + '".');
+            // Return the db if it exists
+            if (name in this._databases) return this._databases[name];
+            // Else throw an error
+            throw new Error('Database name \'' + name + '\' has not been created and does not exist.');
+        }
+    }, {
+        key: 'list',
+        value: function list() {
+            return Object.keys(this._databases);
         }
     }]);
     return MinDB;
 }();
 
+MinDB._RESERVED = ['_databases', 'create', 'get', 'list'];
+// Export the proxied class
 var mindb = new Proxy(new MinDB(), {
     get: function get$$1(target, name) {
         if (name in target) return target[name];
-        if (name in target._databases) return target._databases[name];
+        // Return database if name is a string and found within the database list
+        if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
     },
     set: function set$$1(obj, prop, val) {
-        throw new Error('Do not dynamically set vales on MinDB.');
+        throw new Error('Do not dynamically set values on MinDB.');
     }
 });
 
