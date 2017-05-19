@@ -74,14 +74,23 @@ class Collection {
     return Object.keys(this._documents)
   }
 
-  public remove (id:string):boolean {
-    if (!id) throw new Error(`No id provided to remove from collection`)
-    if (typeof id !== 'string') throw new Error(`The id must be a "string", not a "${typeof id}".`)
-    if (id in this._documents) {
-      delete this._documents[id]
-      return true
+  public remove (id:string):void
+  public remove (doc:Document):void
+  public remove (docs:Document[]):void
+  public remove (a:string|Document|Document[]):void {
+    if (!a) throw new Error(`No argument provided to remove from collection.`)
+    if (typeof a === 'string') {
+      // Remove by id
+      delete this._documents[a]
+    } else if (a instanceof Array) {
+      a.forEach(doc => {
+        this.remove(doc._id)
+      })
+    } else if (typeof a === 'object') {
+      this.remove(a._id)
+    } else {
+      throw new Error(`Incorrect argument provided to remove, must be either "string", "Document" or "Document[]", not "${typeof a}".`)
     }
-    return false
   }
 
   public upsert (document:Document):Document {
