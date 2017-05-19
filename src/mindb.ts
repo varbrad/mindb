@@ -1,12 +1,22 @@
 import { Database, createDatabaseProxy } from './database'
+import { Collection } from './collection'
+import { Query } from './query'
 
 class MinDB {
+  public Database:(typeof Database) = Database
+  public Collection:(typeof Collection) = Collection
+  public Query:(typeof Query) = Query
+
   private static _RESERVED:string[] = [
+    'Database',
+    'Collection',
+    'Query',
     '_RESERVED',
     '_databases',
     'create',
     'get',
-    'list'
+    'list',
+    'reset'
   ]
 
   private _databases:{ [key:string]: Database }
@@ -33,7 +43,7 @@ class MinDB {
 
   public get (name:string):Database {
     // Check the name is actually a string
-    if (typeof name !== 'string') throw new Error(`The database name must be a "string", "not a "${typeof name}".`)
+    if (typeof name !== 'string') throw new Error(`The database name must be a "string", not a "${typeof name}".`)
     // Return the db if it exists
     if (name in this._databases) return this._databases[name]
     // Else throw an error
@@ -42,6 +52,16 @@ class MinDB {
 
   public list ():string[] {
     return Object.keys(this._databases)
+  }
+
+  public reset (name?:string):void {
+    if (name) {
+      if (typeof name !== 'string') throw new Error(`The database name must be a "string", not a "${typeof name}".`)
+      if (!(name in this._databases)) throw new Error(`Database name '${name}' does not exist and cannot be reset.`)
+      delete this._databases[name]
+    } else {
+      this._databases = {}
+    }
   }
 }
 

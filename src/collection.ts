@@ -29,6 +29,10 @@ class Collection {
     this._documents = {}
   }
 
+  public empty ():void {
+    this._documents = {}
+  }
+
   public find ():Query {
     return new Query(this)
   }
@@ -85,6 +89,13 @@ function createCollectionProxy (database:Database, name:string, schema?:object):
     get (target:Collection, name) {
       if (name in target) return target[name]
       if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get[name]
+    },
+    set (obj:Collection, prop:PropertyKey, val:any):boolean {
+      if (prop in obj) {
+        obj[prop] = val
+        return true
+      }
+      throw new Error(`Do not dynamically set values on MinDB.Collection.`)
     }
   })
 }

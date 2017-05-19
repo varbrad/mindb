@@ -61,8 +61,12 @@ function createDatabaseProxy (name:string, options?:object):Database {
       // Return collection if name is a string and found within the collections list
       if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name)
     },
-    set (obj, prop, val):boolean {
-      throw new Error(`Do not dynamically set values on a MinDB.Database instance.`)
+    set (obj:Database, prop:PropertyKey, val:any):boolean {
+      if (prop in obj) {
+        obj[prop] = val
+        return true
+      }
+      throw new Error(`Do not dynamically set values on MinDB.Database.`)
     }
   })
 }
