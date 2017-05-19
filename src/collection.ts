@@ -88,7 +88,7 @@ function createCollectionProxy (database:Database, name:string, schema?:object):
   return new Proxy(col, {
     get (target:Collection, name) {
       if (name in target) return target[name]
-      if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get[name]
+      if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name)
     },
     set (obj:Collection, prop:PropertyKey, val:any):boolean {
       if (prop in obj) {
