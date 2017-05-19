@@ -134,7 +134,7 @@ describe('MinDB.Collection', () => {
       expect(err, 'to be defined')
     })
 
-    it('Should ensure document doesnt use reserved word as id', () => {
+    it('Should throw error if document uses a reserved word as id', () => {
       let err
       try {
         col.insert({ _id: 'upsert', data: 'fail!' })
@@ -164,11 +164,44 @@ describe('MinDB.Collection', () => {
   })
 
   describe('#remove()', () => {
-    it('Should throw error if no id provided')
-    it('Should throw error on non-string id')
-    it('Should remove he document from the collection')
-    it('Should return true if document was removed')
-    it('Should return false if the document was not removed')
+    describe('by id', () => {
+      it('Should throw error if no id provided', () => {
+        col.insert({ _id: 'data', value: 5 })
+        let err
+        try {
+          col.remove()
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should throw error on non-compatible params', () => {
+        let err
+        try {
+          col.remove(new Date())
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should remove the document from the collection', () => {
+        col.insert({ _id: 'test', data: 100 })
+        expect(col.list(), 'to have length', 1)
+        expect(col.list(), 'to contain', 'test')
+        col.remove('test')
+        expect(col.list(), 'to be empty')
+      })
+    })
+    describe('by Document', () => {
+      it('Should throw error if no id on document')
+      it('Should throw error if id is a non-string')
+      it('Should remove document from the collection')
+    })
+    describe('by Documents', () => {
+      it('Should throw error if no id on a document')
+      it('Should throw error if id is a non-string')
+      it('Should remove the documents from the collection')
+    })
   })
 
   describe('#upsert()', () => {
