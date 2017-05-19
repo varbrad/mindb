@@ -74,6 +74,16 @@ class Collection {
     return Object.keys(this._documents)
   }
 
+  public remove (id:string):boolean {
+    if (!id) throw new Error(`No id provided to remove from collection`)
+    if (typeof id !== 'string') throw new Error(`The id must be a "string", not a "${typeof id}".`)
+    if (id in this._documents) {
+      delete this._documents[id]
+      return true
+    }
+    return false
+  }
+
   public upsert (document:Document):Document {
     return this.insert(document, true)
   }

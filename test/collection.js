@@ -163,6 +163,14 @@ describe('MinDB.Collection', () => {
     })
   })
 
+  describe('#remove()', () => {
+    it('Should throw error if no id provided')
+    it('Should throw error on non-string id')
+    it('Should remove he document from the collection')
+    it('Should return true if document was removed')
+    it('Should return false if the document was not removed')
+  })
+
   describe('#upsert()', () => {
     it('Should use insert(..., true) implementation', () => {
       col.insert({ _id: 'fred', value: 95.2 })
