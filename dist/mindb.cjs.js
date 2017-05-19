@@ -1,5 +1,18 @@
 'use strict';
 
+function nestedProperty(doc, key) {
+    key = key.replace(/\[(\w+)\]/g, '.$1');
+    key = key.replace(/^\./, '');
+    var parts = key.split('.');
+    var val = doc;
+    parts.forEach(function (k) {
+        // Is k within val?
+        if (!val.hasOwnProperty(k)) throw new Error('Nested property \'' + key + '\' could not be resolved at \'' + k + '\' property.');
+        val = val[k];
+    });
+    return val;
+}
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -105,8 +118,8 @@ var Query = function () {
                         var r = 0;
                         q.sort.every(function (sort) {
                             // Get document values
-                            var _a = a[sort.key];
-                            var _b = b[sort.key];
+                            var _a = sort.nested ? nestedProperty(a, sort.key) : a[sort.key];
+                            var _b = sort.nested ? nestedProperty(b, sort.key) : b[sort.key];
                             // If the values are different
                             if (_a !== _b) {
                                 // If numbers, use number sorting comparison
@@ -126,6 +139,16 @@ var Query = function () {
                 if (q.limit || q.offset) {
                     c = c.slice(q.offset || 0, (q.offset || 0) + (q.limit || c.length));
                 }
+            }
+            // Apply select
+            if (q.select) {
+                c = c.map(function (doc) {
+                    var o = { _id: doc._id };
+                    q.select.forEach(function (key) {
+                        return o[key] = doc[key];
+                    });
+                    return o;
+                });
             }
             // Return the result set
             return q.limit === 1 || q.byId ? c[0] : c;
@@ -235,18 +258,34 @@ var Query = function () {
             return this.pos();
         }
     }, {
+        key: 'select',
+        value: function select() {
+            for (var _len2 = arguments.length, keys = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                keys[_key2] = arguments[_key2];
+            }
+
+            if (keys.indexOf('_id') !== -1) throw new Error('Document id is always included in the Document, no need to explicity select it.');
+            if (!keys.every(function (key) {
+                return typeof key === 'string';
+            })) throw new Error('All select keys must be of type "string".');
+            var data = clone(this._data, false);
+            data.select = keys;
+            return new Query(this._collection, data);
+        }
+    }, {
         key: 'sort',
         value: function sort() {
             var data = clone(this._data, false);
             data.sort = [];
 
-            for (var _len2 = arguments.length, keys = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                keys[_key2] = arguments[_key2];
+            for (var _len3 = arguments.length, keys = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                keys[_key3] = arguments[_key3];
             }
 
             keys.forEach(function (key) {
                 var order = key[0] === '-' ? -1 : 1;
-                data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order });
+                var nested = key.match(/(\[|\]|\.)/g) ? true : false;
+                data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested });
             });
             return new Query(this._collection, data);
         }
