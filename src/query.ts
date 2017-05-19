@@ -180,9 +180,8 @@ class Query {
   }
 
   select (...keys:string[]):Query {
-    // Keys must at least have 1 key
-    if (keys.indexOf('_id') !== -1) throw new Error(`Document id is always included in the Document, no need to explicity select it`)
-    if (keys.length === 0) throw new Error(`Cannot select no columns from document`)
+    if (keys.indexOf('_id') !== -1) throw new Error(`Document id is always included in the Document, no need to explicity select it.`)
+    if (!keys.every(key => typeof key === 'string')) throw new Error(`All select keys must be of type "string".`)
     const data:QueryData = clone(this._data, false)
     data.select = keys
     return new Query(this._collection, data)
