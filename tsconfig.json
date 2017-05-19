@@ -2,7 +2,9 @@
   "compilerOptions": {
     "removeComments": false,
     "target": "es2017",
-    "outDir": "./dist/es2017"
+    "outDir": "./dist/es2017",
+    "declaration": true,
+    "declarationDir": "./dist/typings"
   },
   "include": [
     "./src/*.ts"

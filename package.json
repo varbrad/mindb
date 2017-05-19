@@ -5,6 +5,7 @@
   "main": "dist/mindb.cjs.js",
   "module": "dist/mindb.esm.js",
   "unpkg": "dist/mindb.min.js",
+  "typings": "dist/typings/main.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/varbrad/mindb.git"
