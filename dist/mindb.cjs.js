@@ -330,6 +330,25 @@ var Collection = function () {
             return Object.keys(this._documents);
         }
     }, {
+        key: 'remove',
+        value: function remove(a) {
+            var _this = this;
+
+            if (!a) throw new Error('No argument provided to remove from collection.');
+            if (typeof a === 'string') {
+                // Remove by id
+                delete this._documents[a];
+            } else if (a instanceof Array) {
+                a.forEach(function (doc) {
+                    _this.remove(doc._id);
+                });
+            } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object') {
+                this.remove(a._id);
+            } else {
+                throw new Error('Incorrect argument provided to remove, must be either "string", "Document" or "Document[]", not "' + (typeof a === 'undefined' ? 'undefined' : _typeof(a)) + '".');
+            }
+        }
+    }, {
         key: 'upsert',
         value: function upsert(document) {
             return this.insert(document, true);
@@ -337,10 +356,10 @@ var Collection = function () {
     }, {
         key: 'values',
         value: function values() {
-            var _this = this;
+            var _this2 = this;
 
             return Object.keys(this._documents).map(function (k) {
-                return _this._documents[k];
+                return _this2._documents[k];
             });
         }
     }]);
@@ -353,7 +372,7 @@ function createCollectionProxy(database, name, schema) {
     return new Proxy(col, {
         get: function get$$1(target, name) {
             if (name in target) return target[name];
-            if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get[name];
+            if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name);
         },
         set: function set$$1(obj, prop, val) {
             if (prop in obj) {

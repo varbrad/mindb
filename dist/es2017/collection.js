@@ -54,6 +54,25 @@ class Collection {
     list() {
         return Object.keys(this._documents);
     }
+    remove(a) {
+        if (!a)
+            throw new Error(`No argument provided to remove from collection.`);
+        if (typeof a === 'string') {
+            // Remove by id
+            delete this._documents[a];
+        }
+        else if (a instanceof Array) {
+            a.forEach(doc => {
+                this.remove(doc._id);
+            });
+        }
+        else if (typeof a === 'object') {
+            this.remove(a._id);
+        }
+        else {
+            throw new Error(`Incorrect argument provided to remove, must be either "string", "Document" or "Document[]", not "${typeof a}".`);
+        }
+    }
     upsert(document) {
         return this.insert(document, true);
     }
@@ -80,7 +99,7 @@ function createCollectionProxy(database, name, schema) {
             if (name in target)
                 return target[name];
             if (typeof name === 'string' && target.list().indexOf(name) !== -1)
-                return target.get[name];
+                return target.get(name);
         },
         set(obj, prop, val) {
             if (prop in obj) {
