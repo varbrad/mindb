@@ -3,6 +3,8 @@ import { Document } from './document'
 
 import { QueryData, WheresData } from './types/types'
 
+import { nestedProperty } from './utils'
+
 const clone = require('clone')
 
 class Query {
@@ -59,8 +61,8 @@ class Query {
           let r:number = 0
           q.sort.every(sort => {
             // Get document values
-            const _a = a[sort.key]
-            const _b = b[sort.key]
+            const _a = sort.nested ? nestedProperty(a, sort.key) : a[sort.key]
+            const _b = sort.nested ? nestedProperty(b, sort.key) : b[sort.key]
             // If the values are different
             if (_a !== _b) {
               // If numbers, use number sorting comparison
@@ -82,6 +84,14 @@ class Query {
       if (q.limit || q.offset) {
         c = c.slice(q.offset || 0, (q.offset || 0) + (q.limit || c.length))
       }
+    }
+    // Apply select
+    if (q.select) {
+      c = c.map(doc => {
+        const o:Document = { _id: doc._id }
+        q.select.forEach(key => o[key] = doc[key])
+        return o
+      })
     }
     // Return the result set
     return (q.limit === 1 || q.byId) ? c[0]: c
@@ -169,12 +179,22 @@ class Query {
     return this.pos()
   }
 
+  select (...keys:string[]):Query {
+    // Keys must at least have 1 key
+    if (keys.indexOf('_id') !== -1) throw new Error(`Document id is always included in the Document, no need to explicity select it`)
+    if (keys.length === 0) throw new Error(`Cannot select no columns from document`)
+    const data:QueryData = clone(this._data, false)
+    data.select = keys
+    return new Query(this._collection, data)
+  }
+
   sort (...keys:string[]):Query {
     const data:QueryData = clone(this._data, false)
     data.sort = []
     keys.forEach(key => {
       const order:1|-1 = key[0] === '-' ? -1 : 1
-      data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order })
+      const nested = key.match(/(\[|\]|\.)/g) ? true : false
+      data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested })
     })
     return new Query(this._collection, data)
   }
