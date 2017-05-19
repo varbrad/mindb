@@ -2,20 +2,22 @@ import { Collection, createCollectionProxy } from './collection'
 
 class Database {
   private static _RESERVED:string[] = [
+    '_RESERVED',
+    'name',
     '_collections',
-    '_name',
     '_options',
     'collection',
     'get',
     'list'
   ]
 
+  public name:string
+
   private _collections:{ [key:string]: Collection }
-  private _name:string
   private _options:object
 
   constructor (name:string, options?:object) {
-    this._name = name
+    this.name = name
     this._collections = {}
     this._options = options
   }
@@ -28,7 +30,7 @@ class Database {
       if (name === word) throw new Error(`Collection name '${name}' is an internal reserved name and cannot be used.`)
     })
     // Is there already a database with this name?
-    if (name in this._collections) throw new Error(`A collection with name '${name}' already exists on database '${this._name}'.`)
+    if (name in this._collections) throw new Error(`A collection with name '${name}' already exists on database '${this.name}'.`)
     // Create the collection
     const col:Collection = createCollectionProxy(this, name, schema)
     this._collections[name] = col
@@ -42,7 +44,7 @@ class Database {
     // Return the col if it exists
     if (name in this._collections) return this._collections[name]
     // Else throw an error
-    throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this._name}'.`)
+    throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this.name}'.`)
   }
 
   public list ():string[] {

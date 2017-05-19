@@ -4,25 +4,28 @@ import { Query } from './query'
 
 class Collection {
   private static _RESERVED:string[] = [
+    '_RESERVED',
+    'name',
+    'schema',
     '_database',
-    '_name',
-    '_schema',
     '_documents',
     'get',
     'insert',
     'list',
-    'upsert'
+    'upsert',
+    'values'
   ]
 
+  public name:string
+  public schema:object
+
   private _database:Database
-  private _name:string
-  private _schema:object
   private _documents:{ [_id:string]: Document }
 
   constructor (database:Database, name:string, schema?:object) {
     this._database = database
-    this._name = name
-    this._schema = schema
+    this.name = name
+    this.schema = schema
     this._documents = {}
   }
 
@@ -32,9 +35,9 @@ class Collection {
 
   public findOne (id?:string):Query {
     // Ensure the id is a string
-    if (typeof id !== 'string') throw new Error(`The document is must be a "string", not a "${typeof id}".`)
-    let q = this.find()
-    return q
+    if (id && typeof id !== 'string') throw new Error(`The document is must be a "string", not a "${typeof id}".`)
+    if (id) return this.find().byId(id)
+    else return this.find().limit(1)
   }
 
   public get (id:string):Document {
@@ -56,7 +59,7 @@ class Collection {
       if (document._id === word) throw new Error(`The document _id '${document._id}' is an internal reserved name and cannot be used.`)
     })
     // Is this _id already in the collection?
-    if (!overwrite && document._id in this._documents) throw new Error(`The document _id '${document._id}' already exists within the '${this._name}' collection.`)
+    if (!overwrite && document._id in this._documents) throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`)
     // Add the document
     this._documents[document._id] = document
     // Return the document
@@ -69,6 +72,10 @@ class Collection {
 
   public upsert (document:Document):Document {
     return this.insert(document, true)
+  }
+
+  public values ():Document[] {
+    return Object.keys(this._documents).map(k => this._documents[k])
   }
 }
 
