@@ -11,11 +11,12 @@
     "url": "git+https://github.com/varbrad/mindb.git"
   },
   "scripts": {
+    "build": "npm run build:src && npm run build:min && npm run build:cjs && npm run build:esm",
     "build:src": "tsc",
     "build:min": "rollup --config config/rollup.min.js",
     "build:cjs": "rollup --config config/rollup.cjs.js",
     "build:esm": "rollup --config config/rollup.esm.js",
-    "build": "npm run build:src && npm run build:min && npm run build:cjs && npm run build:esm",
+    "docs": "typedoc --out ./docs/typedocs/",
     "test": "mocha ./test/main.js"
   },
   "keywords": [
@@ -44,6 +45,7 @@
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^1.0.2",
+    "typedoc": "^0.7.1",
     "typescript": "^2.3.2",
     "unexpected": "^10.29.0"
   },
