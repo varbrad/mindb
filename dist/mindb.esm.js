@@ -112,7 +112,7 @@ var Query = function () {
                 }
                 // Run sorts
                 if (q.sort) {
-                    c = c.sort(function (a, b) {
+                    c.sort(function (a, b) {
                         var r = 0;
                         q.sort.every(function (sort) {
                             // Get document values
@@ -173,6 +173,11 @@ var Query = function () {
         key: 'gte',
         value: function gte(value) {
             return this.op('>=', value);
+        }
+    }, {
+        key: 'is',
+        value: function is(value) {
+            return this.eq(value);
         }
     }, {
         key: 'limit',

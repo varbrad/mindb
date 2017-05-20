@@ -45,7 +45,7 @@ class Query {
             }
             // Run sorts
             if (q.sort) {
-                c = c.sort((a, b) => {
+                c.sort((a, b) => {
                     let r = 0;
                     q.sort.every(sort => {
                         // Get document values
@@ -100,6 +100,9 @@ class Query {
     }
     gte(value) {
         return this.op('>=', value);
+    }
+    is(value) {
+        return this.eq(value);
     }
     limit(m) {
         const data = clone(this._data, false);
