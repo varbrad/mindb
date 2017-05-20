@@ -57,7 +57,7 @@ class Query {
       }
       // Run sorts
       if (q.sort) {
-        c = c.sort((a:Document, b:Document):number => {
+        c.sort((a:Document, b:Document):number => {
           let r:number = 0
           q.sort.every(sort => {
             // Get document values
@@ -112,8 +112,12 @@ class Query {
     return this.op('>', value)
   }
 
-  gte (value: any):Query {
+  gte (value:any):Query {
     return this.op('>=', value)
+  }
+
+  is (value:any):Query {
+    return this.eq(value)
   }
 
   limit (m:number):Query {
