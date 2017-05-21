@@ -60,3 +60,5 @@ typings/
 # Ignore local testing sandbox files
 sandbox.ts
 sandbox.js
+sandbox.cjs.js
+sandbox.ts.js
