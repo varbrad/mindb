@@ -70,7 +70,7 @@ Requires that the property value is positive (> 0).
 Requires that the property value is within the min->max bound (inclusive).
 
 ## Result Count
-If you only want to know the number of matching documents based upon a query, you can invoke the `count()` method to return the matching document total rather than the documents themselves.
+If you only want to know the number of matching documents based upon a query, you can invoke the `count()` method to return the matching document total rather than the documents themselves. If all you want to query is the result set length, this is faster than executing the query and then getting the length of the results.
 
 ````javascript
 const ctx = MinDB.db.ctx
