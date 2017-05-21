@@ -1,4 +1,4 @@
-import { nestedProperty } from './utils';
+import { quickSort } from './utils';
 const clone = require('clone');
 class Query {
     constructor(collection, data) {
@@ -8,6 +8,11 @@ class Query {
     byId(id) {
         const data = clone(this._data, false);
         data.byId = id;
+        return new Query(this._collection, data);
+    }
+    count() {
+        const data = clone(this._data, false);
+        data.count = true;
         return new Query(this._collection, data);
     }
     eq(value) {
@@ -43,32 +48,9 @@ class Query {
                     });
                 });
             }
-            // Run sorts
-            if (q.sort) {
-                c.sort((a, b) => {
-                    let r = 0;
-                    q.sort.every(sort => {
-                        // Get document values
-                        const _a = sort.nested ? nestedProperty(a, sort.key) : a[sort.key];
-                        const _b = sort.nested ? nestedProperty(b, sort.key) : b[sort.key];
-                        // If the values are different
-                        if (_a !== _b) {
-                            // If numbers, use number sorting comparison
-                            if (typeof _a === 'number' && typeof _b === 'number')
-                                r = (_a - _b) * sort.order;
-                            else
-                                r = (_a > _b ? 1 : -1) * sort.order;
-                            // Return false, we don't need to sort on further keys
-                            return false;
-                        }
-                        else {
-                            // We will need to sort on the next key, as the values were equal
-                            return true;
-                        }
-                    });
-                    // Return the resulting sort value
-                    return r;
-                });
+            // Run sorts, only if not counting (dont bother sorting!)
+            if (q.sort && !q.count) {
+                quickSort(c, q.sort);
             }
             // Limit & Offset
             if (q.limit || q.offset) {
@@ -84,7 +66,12 @@ class Query {
             });
         }
         // Return the result set
-        return (q.limit === 1 || q.byId) ? c[0] : c;
+        if (q.count) {
+            return c.length;
+        }
+        else {
+            return (q.limit === 1 || q.byId) ? c[0] : c;
+        }
     }
     exists() {
         return this.op('!==', undefined);

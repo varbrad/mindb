@@ -1,16 +1,3 @@
-function nestedProperty(doc, key) {
-    key = key.replace(/\[(\w+)\]/g, '.$1');
-    key = key.replace(/^\./, '');
-    var parts = key.split('.');
-    var val = doc;
-    parts.forEach(function (k) {
-        // Is k within val?
-        if (!val.hasOwnProperty(k)) throw new Error('Nested property \'' + key + '\' could not be resolved at \'' + k + '\' property.');
-        val = val[k];
-    });
-    return val;
-}
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -51,6 +38,138 @@ var createClass = function () {
   };
 }();
 
+
+
+
+
+var defineProperty = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
+var Index = function () {
+    function Index(name, sortData) {
+        classCallCheck(this, Index);
+
+        this.name = name;
+        this._index = [];
+        this._sortData = sortData;
+    }
+
+    createClass(Index, [{
+        key: "empty",
+        value: function empty() {
+            this._index.length = 0;
+        }
+    }, {
+        key: "insert",
+        value: function insert(doc) {
+            if (this._sortData) {
+                // Work out where the doc goes based on the sort data
+            } else {
+                this._index.push(doc);
+            }
+        }
+    }, {
+        key: "remove",
+        value: function remove(doc) {
+            if (this._sortData) {
+                // Work out where the document should be and remove it
+            } else {
+                this._index.splice(this._index.findIndex(function (d) {
+                    return d._id === doc._id;
+                }), 1);
+            }
+        }
+    }, {
+        key: "values",
+        value: function values() {
+            return this._index;
+        }
+    }]);
+    return Index;
+}();
+
+function nestedProperty(doc, key) {
+    key = key.replace(/\[(\w+)\]/g, '.$1');
+    key = key.replace(/^\./, '');
+    var parts = key.split('.');
+    var val = doc;
+    parts.forEach(function (k) {
+        // Is k within val?
+        if (!val.hasOwnProperty(k)) throw new Error('Nested property \'' + key + '\' could not be resolved at \'' + k + '\' property.');
+        val = val[k];
+    });
+    return val;
+}
+// This function is quite slow!
+function comparisonFn(sortData, a, b) {
+    var l = sortData.length;
+    for (var i = 0; i < l; ++i) {
+        var _sort = sortData[i];
+        var _a = void 0;
+        var _b = void 0;
+        if (_sort.nested) {
+            _a = nestedProperty(a, _sort.key);
+            _b = nestedProperty(b, _sort.key);
+        } else {
+            _a = a[_sort.key];
+            _b = b[_sort.key];
+        }
+        if (_a !== _b) {
+            return (_a > _b ? 1 : -1) * _sort.order;
+        }
+    }
+    return 0;
+}
+function quickSort(documents, sortData) {
+    quickSortFn(documents, 0, documents.length - 1, sortData);
+}
+function quickSortFn(docs, left, right, sortData) {
+    var iLeft = left;
+    var iRight = right;
+    var dir = true;
+    var pivot = right;
+    while (left - right < 0) {
+        if (dir) {
+            if (comparisonFn(sortData, docs[pivot], docs[left]) < 0) {
+                arraySwap(docs, pivot, left);
+                pivot = left;
+                right--;
+                dir = !dir;
+            } else {
+                left++;
+            }
+        } else {
+            if (comparisonFn(sortData, docs[pivot], docs[right]) <= 0) {
+                right--;
+            } else {
+                arraySwap(docs, pivot, right);
+                pivot = right;
+                left++;
+                dir = !dir;
+            }
+        }
+    }
+    if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, sortData);
+    if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, sortData);
+}
+function arraySwap(a, i, j) {
+    var t = a[i];
+    a[i] = a[j];
+    a[j] = t;
+}
+
 var clone = require('clone');
 
 var Query = function () {
@@ -66,6 +185,13 @@ var Query = function () {
         value: function byId(id) {
             var data = clone(this._data, false);
             data.byId = id;
+            return new Query(this._collection, data);
+        }
+    }, {
+        key: 'count',
+        value: function count() {
+            var data = clone(this._data, false);
+            data.count = true;
             return new Query(this._collection, data);
         }
     }, {
@@ -110,28 +236,9 @@ var Query = function () {
                         });
                     });
                 }
-                // Run sorts
-                if (q.sort) {
-                    c.sort(function (a, b) {
-                        var r = 0;
-                        q.sort.every(function (sort) {
-                            // Get document values
-                            var _a = sort.nested ? nestedProperty(a, sort.key) : a[sort.key];
-                            var _b = sort.nested ? nestedProperty(b, sort.key) : b[sort.key];
-                            // If the values are different
-                            if (_a !== _b) {
-                                // If numbers, use number sorting comparison
-                                if (typeof _a === 'number' && typeof _b === 'number') r = (_a - _b) * sort.order;else r = (_a > _b ? 1 : -1) * sort.order;
-                                // Return false, we don't need to sort on further keys
-                                return false;
-                            } else {
-                                // We will need to sort on the next key, as the values were equal
-                                return true;
-                            }
-                        });
-                        // Return the resulting sort value
-                        return r;
-                    });
+                // Run sorts, only if not counting (dont bother sorting!)
+                if (q.sort && !q.count) {
+                    quickSort(c, q.sort);
                 }
                 // Limit & Offset
                 if (q.limit || q.offset) {
@@ -149,7 +256,11 @@ var Query = function () {
                 });
             }
             // Return the result set
-            return q.limit === 1 || q.byId ? c[0] : c;
+            if (q.count) {
+                return c.length;
+            } else {
+                return q.limit === 1 || q.byId ? c[0] : c;
+            }
         }
     }, {
         key: 'exists',
@@ -277,7 +388,7 @@ var Query = function () {
         }
     }, {
         key: 'sort',
-        value: function sort() {
+        value: function sort$$1() {
             var data = clone(this._data, false);
             data.sort = [];
 
@@ -317,12 +428,14 @@ var Collection = function () {
         this.name = name;
         this.schema = schema;
         this._documents = {};
+        this._indexes = defineProperty({}, Collection._DEFAULT_INDEX, new Index(Collection._DEFAULT_INDEX));
     }
 
     createClass(Collection, [{
         key: 'empty',
         value: function empty() {
             this._documents = {};
+            this._indexes[Collection._DEFAULT_INDEX].empty();
         }
     }, {
         key: 'find',
@@ -361,8 +474,10 @@ var Collection = function () {
             });
             // Is this _id already in the collection?
             if (!overwrite && document._id in this._documents) throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this.name + '\' collection.');
-            // Add the document
+            // Add the document to the document object
             this._documents[document._id] = document;
+            // Add the document to the __default index
+            this._indexes[Collection._DEFAULT_INDEX].insert(document);
             // Return the document
             return document;
         }
@@ -377,15 +492,18 @@ var Collection = function () {
             var _this = this;
 
             if (!a) throw new Error('No argument provided to remove from collection.');
-            if (typeof a === 'string') {
-                // Remove by id
-                delete this._documents[a];
-            } else if (a instanceof Array) {
+            if (Array.isArray(a)) {
                 a.forEach(function (doc) {
-                    _this.remove(doc._id);
+                    _this.remove(doc);
                 });
-            } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object') {
-                this.remove(a._id);
+            } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object' && '_id' in a) {
+                // Delete from dictionary
+                delete this._documents[a._id];
+                // Delete from index
+                this._indexes[Collection._DEFAULT_INDEX].remove(a);
+            } else if (typeof a === 'string') {
+                var doc = this.get(a);
+                if (doc) this.remove(doc);
             } else {
                 throw new Error('Incorrect argument provided to remove, must be either "string", "Document" or "Document[]", not "' + (typeof a === 'undefined' ? 'undefined' : _typeof(a)) + '".');
             }
@@ -398,17 +516,14 @@ var Collection = function () {
     }, {
         key: 'values',
         value: function values() {
-            var _this2 = this;
-
-            return Object.keys(this._documents).map(function (k) {
-                return _this2._documents[k];
-            });
+            return this._indexes[Collection._DEFAULT_INDEX].values();
         }
     }]);
     return Collection;
 }();
 
-Collection._RESERVED = ['_RESERVED', 'name', 'schema', '_database', '_documents', 'get', 'insert', 'list', 'upsert', 'values'];
+Collection._DEFAULT_INDEX = '__default';
+Collection._RESERVED = ['_DEFAULT_INDEX', '_RESERVED', 'name', 'schema', '_database', '_documents', '_indexes', 'get', 'insert', 'list', 'upsert', 'values'];
 function createCollectionProxy(database, name, schema) {
     var col = new Collection(database, name, schema);
     return new Proxy(col, {
