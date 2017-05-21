@@ -3,7 +3,7 @@ import { Document } from './document'
 
 import { QueryData, WheresData } from './types/types'
 
-import { nestedProperty } from './utils'
+import { quickSort } from './utils'
 
 const clone = require('clone')
 
@@ -63,28 +63,7 @@ class Query {
       }
       // Run sorts, only if not counting (dont bother sorting!)
       if (q.sort && !q.count) {
-        c.sort((a:Document, b:Document):number => {
-          let r:number = 0
-          q.sort.every(sort => {
-            // Get document values
-            const _a = sort.nested ? nestedProperty(a, sort.key) : a[sort.key]
-            const _b = sort.nested ? nestedProperty(b, sort.key) : b[sort.key]
-            // If the values are different
-            if (_a !== _b) {
-              // If numbers, use number sorting comparison
-              if (typeof _a === 'number' && typeof _b === 'number') r = (_a - _b) * sort.order
-              // Else just use standard gt/lt comparison
-              else r = (_a > _b ? 1 : -1) * sort.order
-              // Return false, we don't need to sort on further keys
-              return false
-            } else {
-              // We will need to sort on the next key, as the values were equal
-              return true
-            }
-          })
-          // Return the resulting sort value
-          return r
-        })
+        quickSort(c, q.sort)
       }
       // Limit & Offset
       if (q.limit || q.offset) {

@@ -105,7 +105,7 @@ class Collection {
 function createCollectionProxy (database:Database, name:string, schema?:object):Collection {
   const col:Collection = new Collection(database, name, schema)
   return new Proxy(col, {
-    get (target:Collection, name) {
+    get (target:Collection, name:PropertyKey) {
       if (name in target) return target[name]
       if (typeof name === 'string' && target.list().indexOf(name) !== -1) return target.get(name)
     },
