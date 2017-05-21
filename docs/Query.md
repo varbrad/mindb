@@ -69,6 +69,14 @@ Requires that the property value is positive (> 0).
 ### `within(min, max)`
 Requires that the property value is within the min->max bound (inclusive).
 
+## Result Count
+If you only want to know the number of matching documents based upon a query, you can invoke the `count()` method to return the matching document total rather than the documents themselves.
+
+````javascript
+const ctx = MinDB.db.ctx
+const total = ctx.find().where('age').lt(40).count().exec() // Will be a number
+````
+
 # Examples
 ````javascript
 // Get documents where age is between 18 and 50 (inclusive)

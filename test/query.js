@@ -25,6 +25,15 @@ describe('MinDB.Query', () => {
     })
   })
 
+  describe('#count()', () => {
+    it('Should return number of results', () => {
+      expect(col.find().where('i').lt(250).count().exec(), 'to equal', 250)
+    })
+    it('Should return zero if no results', () => {
+      expect(col.find().where('i').gt(820).count().exec(), 'to equal', 0)
+    })
+  })
+
   describe('#eq()', () => {
     it('Should only match properties with values equal to the given value', () => {
       const result = col.find().where('k').eq(1).exec()

@@ -22,11 +22,17 @@ class Query {
     return new Query(this._collection, data)
   }
 
+  count ():Query {
+    const data:QueryData = clone(this._data, false)
+    data.count = true
+    return new Query(this._collection, data)
+  }
+
   eq (value:any):Query {
     return this.op('===', value)
   }
 
-  exec ():Document|Document[] {
+  exec ():number|Document|Document[] {
     const q:QueryData = this._data
     let c:Document[]
     // By ID fetch or whole search
@@ -55,8 +61,8 @@ class Query {
           })
         })
       }
-      // Run sorts
-      if (q.sort) {
+      // Run sorts, only if not counting (dont bother sorting!)
+      if (q.sort && !q.count) {
         c.sort((a:Document, b:Document):number => {
           let r:number = 0
           q.sort.every(sort => {
@@ -94,7 +100,11 @@ class Query {
       })
     }
     // Return the result set
-    return (q.limit === 1 || q.byId) ? c[0]: c
+    if (q.count) {
+      return c.length
+    } else {
+      return (q.limit === 1 || q.byId) ? c[0]: c
+    }
   }
 
   exists ():Query {
