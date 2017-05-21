@@ -1,14 +1,19 @@
 import { Database } from './database'
 import { Document } from './document'
+import { Index } from './index'
 import { Query } from './query'
 
 class Collection {
+  private static _DEFAULT_INDEX:string = '__default'
+
   private static _RESERVED:string[] = [
+    '_DEFAULT_INDEX',
     '_RESERVED',
     'name',
     'schema',
     '_database',
     '_documents',
+    '_indexes',
     'get',
     'insert',
     'list',
@@ -21,16 +26,19 @@ class Collection {
 
   private _database:Database
   private _documents:{ [_id:string]: Document }
+  private _indexes:{ [name:string]: Index }
 
   constructor (database:Database, name:string, schema?:object) {
     this._database = database
     this.name = name
     this.schema = schema
     this._documents = {}
+    this._indexes = { [Collection._DEFAULT_INDEX]: new Index(Collection._DEFAULT_INDEX) }
   }
 
   public empty ():void {
     this._documents = {}
+    this._indexes[Collection._DEFAULT_INDEX].empty()
   }
 
   public find ():Query {
@@ -64,8 +72,10 @@ class Collection {
     })
     // Is this _id already in the collection?
     if (!overwrite && document._id in this._documents) throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`)
-    // Add the document
+    // Add the document to the document object
     this._documents[document._id] = document
+    // Add the document to the __default index
+    this._indexes[Collection._DEFAULT_INDEX].insert(document)
     // Return the document
     return document
   }
@@ -79,15 +89,18 @@ class Collection {
   public remove (docs:Document[]):void
   public remove (a:string|Document|Document[]):void {
     if (!a) throw new Error(`No argument provided to remove from collection.`)
-    if (typeof a === 'string') {
-      // Remove by id
-      delete this._documents[a]
-    } else if (a instanceof Array) {
+    if (Array.isArray(a)) {
       a.forEach(doc => {
-        this.remove(doc._id)
+        this.remove(doc)
       })
-    } else if (typeof a === 'object') {
-      this.remove(a._id)
+    } else if (typeof a === 'object' && '_id' in a) {
+      // Delete from dictionary
+      delete this._documents[a._id]
+      // Delete from index
+      this._indexes[Collection._DEFAULT_INDEX].remove(a)
+    } else if (typeof a === 'string') {
+      const doc = this.get(a)
+      if (doc) this.remove(doc)
     } else {
       throw new Error(`Incorrect argument provided to remove, must be either "string", "Document" or "Document[]", not "${typeof a}".`)
     }
@@ -98,7 +111,7 @@ class Collection {
   }
 
   public values ():Document[] {
-    return Object.keys(this._documents).map(k => this._documents[k])
+    return this._indexes[Collection._DEFAULT_INDEX].values()
   }
 }
 
