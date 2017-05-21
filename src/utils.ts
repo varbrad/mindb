@@ -82,4 +82,14 @@ function arraySwap (a:any[], i:number, j:number) {
   a[j] = t
 }
 
-export { nestedProperty, sort, quickSort }
+function createSortData (keys:string[]):SortData[] {
+  const sd:SortData[] = []
+  keys.forEach(key => {
+    const order:1|-1 = key[0] === '-' ? -1 : 1
+    const nested = key.match(/(\[|\]|\.)/g) ? true : false
+    sd.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested })
+  })
+  return sd
+}
+
+export { createSortData, nestedProperty, sort, quickSort }

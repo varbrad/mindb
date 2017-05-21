@@ -3,7 +3,7 @@ import { Document } from './document'
 
 import { QueryData, WheresData } from './types/types'
 
-import { quickSort } from './utils'
+import { createSortData, quickSort } from './utils'
 
 const clone = require('clone')
 
@@ -182,12 +182,7 @@ class Query {
 
   sort (...keys:string[]):Query {
     const data:QueryData = clone(this._data, false)
-    data.sort = []
-    keys.forEach(key => {
-      const order:1|-1 = key[0] === '-' ? -1 : 1
-      const nested = key.match(/(\[|\]|\.)/g) ? true : false
-      data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested })
-    })
+    data.sort = createSortData(keys)
     return new Query(this._collection, data)
   }
 

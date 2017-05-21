@@ -38,7 +38,9 @@ class Collection {
 
   public empty ():void {
     this._documents = {}
-    this._indexes[Collection._DEFAULT_INDEX].empty()
+    Object.keys(this._indexes).forEach(key => {
+      this._indexes[key].empty()
+    })
   }
 
   public find ():Query {
@@ -61,6 +63,10 @@ class Collection {
     return undefined
   }
 
+  public index (...keys:string[]):void {
+
+  }
+
   public insert (document:Document, overwrite:boolean = false):Document {
     // Does the document have an _id?
     if (!document._id) throw new Error(`The document to be inserted has no '_id'.`)
@@ -74,8 +80,10 @@ class Collection {
     if (!overwrite && document._id in this._documents) throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`)
     // Add the document to the document object
     this._documents[document._id] = document
-    // Add the document to the __default index
-    this._indexes[Collection._DEFAULT_INDEX].insert(document)
+    // Add the document to all indexes
+    Object.keys(this._indexes).forEach(key => {
+      this._indexes[key].insert(document)
+    })
     // Return the document
     return document
   }
@@ -96,8 +104,10 @@ class Collection {
     } else if (typeof a === 'object' && '_id' in a) {
       // Delete from dictionary
       delete this._documents[a._id]
-      // Delete from index
-      this._indexes[Collection._DEFAULT_INDEX].remove(a)
+      // Delete from indexes
+      Object.keys(this._indexes).forEach(key => {
+        this._indexes[key].remove(a)
+      })
     } else if (typeof a === 'string') {
       const doc = this.get(a)
       if (doc) this.remove(doc)
