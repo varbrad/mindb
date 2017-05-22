@@ -3,7 +3,7 @@ import { Document } from './document'
 
 import { QueryData, WheresData } from './types/types'
 
-import { createSortData, quickSort } from './utils'
+import { createSortData, sort } from './utils'
 
 const clone = require('clone')
 
@@ -35,11 +35,18 @@ class Query {
   exec ():number|Document|Document[] {
     const q:QueryData = this._data
     let c:Document[]
+    let usedIndex:boolean = false
     // By ID fetch or whole search
     if (q.byId) {
       c = [ this._collection.get(q.byId) ]
     } else {
-      c = this._collection.values()
+      if (q.sort) {
+        // Get key name of sort
+        const name = q.sort.map(qd => qd.key).join(',')
+        c = this._collection.values(name)
+        if (c) usedIndex = true
+      }
+      if (!c) c = this._collection.values().slice()
       // Run JS filters
       if (q.filters) {
         q.filters.forEach(filter => {
@@ -62,8 +69,8 @@ class Query {
         })
       }
       // Run sorts, only if not counting (dont bother sorting!)
-      if (q.sort && !q.count) {
-        quickSort(c, q.sort)
+      if (q.sort && !q.count && !usedIndex) {
+        sort(c, q.sort)
       }
       // Limit & Offset
       if (q.limit || q.offset) {

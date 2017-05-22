@@ -92,4 +92,37 @@ function createSortData (keys:string[]):SortData[] {
   return sd
 }
 
-export { createSortData, nestedProperty, sort, quickSort }
+/**
+ * @param index The index to traverse
+ * @param document The document to find
+ *
+ * @return The index of the item
+ */
+function binarySearch (index:Document[], document:Document, sortData:SortData[], lastIndex?:boolean):number {
+  let min:number = 0
+  let max:number = index.length - 1
+  let i:number
+  let d:Document
+  let comp:number
+  while (true) {
+    i = min + Math.floor((max - min) / 2)
+    comp = comparisonFn(sortData, document, index[i])
+    if (comp === 0) return i
+    if (comp > 0) {
+      // Move to the right if we can
+      if (i === max) return lastIndex ? i + 1 : -1
+      min += Math.ceil((max - min + 1) / 2)
+    } else {
+      // Move to the left if we can
+      if (i === min) return lastIndex ? i : -1
+      max -= Math.ceil((max - min + 1) / 2)
+    }
+  }
+}
+
+function binaryInsert (index:Document[], document:Document, sortData:SortData[]):void {
+  const i = binarySearch(index, document, sortData, true)
+  index.splice(i, 0, document)
+}
+
+export { binaryInsert, binarySearch, createSortData, nestedProperty, sort, quickSort }

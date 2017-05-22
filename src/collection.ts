@@ -3,6 +3,8 @@ import { Document } from './document'
 import { Index } from './index'
 import { Query } from './query'
 
+import { createSortData } from './utils'
+
 class Collection {
   private static _DEFAULT_INDEX:string = '__default'
 
@@ -64,7 +66,9 @@ class Collection {
   }
 
   public index (...keys:string[]):void {
-
+    const sortData = createSortData(keys)
+    const name = keys.join(',')
+    this._indexes[name] = new Index(name, sortData)
   }
 
   public insert (document:Document, overwrite:boolean = false):Document {
@@ -126,8 +130,10 @@ class Collection {
     return this.insert(document, true)
   }
 
-  public values ():Document[] {
-    return this._indexes[Collection._DEFAULT_INDEX].values()
+  public values (name?:string):Document[] {
+    if (!name) return this._indexes[Collection._DEFAULT_INDEX].values()
+    if (name in this._indexes) return this._indexes[name].values()
+    return undefined
   }
 }
 
