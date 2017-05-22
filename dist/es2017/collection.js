@@ -1,5 +1,6 @@
 import { Index } from './index';
 import { Query } from './query';
+import { createSortData } from './utils';
 class Collection {
     constructor(database, name, schema) {
         this._database = database;
@@ -10,7 +11,9 @@ class Collection {
     }
     empty() {
         this._documents = {};
-        this._indexes[Collection._DEFAULT_INDEX].empty();
+        Object.keys(this._indexes).forEach(key => {
+            this._indexes[key].empty();
+        });
     }
     find() {
         return new Query(this);
@@ -34,6 +37,11 @@ class Collection {
         // Else return undefined, don't throw an error
         return undefined;
     }
+    index(...keys) {
+        const sortData = createSortData(keys);
+        const name = keys.join(',');
+        this._indexes[name] = new Index(name, sortData);
+    }
     insert(document, overwrite = false) {
         // Does the document have an _id?
         if (!document._id)
@@ -47,12 +55,20 @@ class Collection {
                 throw new Error(`The document _id '${document._id}' is an internal reserved name and cannot be used.`);
         });
         // Is this _id already in the collection?
-        if (!overwrite && document._id in this._documents)
-            throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`);
+        if (document._id in this._documents) {
+            if (overwrite) {
+                this.remove(document);
+            }
+            else {
+                throw new Error(`The document _id '${document._id}' already exists within the '${this.name}' collection.`);
+            }
+        }
         // Add the document to the document object
         this._documents[document._id] = document;
-        // Add the document to the __default index
-        this._indexes[Collection._DEFAULT_INDEX].insert(document);
+        // Add the document to all indexes
+        Object.keys(this._indexes).forEach(key => {
+            this._indexes[key].insert(document);
+        });
         // Return the document
         return document;
     }
@@ -70,8 +86,10 @@ class Collection {
         else if (typeof a === 'object' && '_id' in a) {
             // Delete from dictionary
             delete this._documents[a._id];
-            // Delete from index
-            this._indexes[Collection._DEFAULT_INDEX].remove(a);
+            // Delete from indexes
+            Object.keys(this._indexes).forEach(key => {
+                this._indexes[key].remove(a);
+            });
         }
         else if (typeof a === 'string') {
             const doc = this.get(a);
@@ -85,8 +103,12 @@ class Collection {
     upsert(document) {
         return this.insert(document, true);
     }
-    values() {
-        return this._indexes[Collection._DEFAULT_INDEX].values();
+    values(name) {
+        if (!name)
+            return this._indexes[Collection._DEFAULT_INDEX].values();
+        if (name in this._indexes)
+            return this._indexes[name].values();
+        return undefined;
     }
 }
 Collection._DEFAULT_INDEX = '__default';

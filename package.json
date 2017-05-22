@@ -1,6 +1,6 @@
 {
   "name": "mindb",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Schema-based document-oriented database for JavaScript.",
   "main": "dist/mindb.cjs.js",
   "module": "dist/mindb.esm.js",

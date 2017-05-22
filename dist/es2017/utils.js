@@ -79,4 +79,48 @@ function arraySwap(a, i, j) {
     a[i] = a[j];
     a[j] = t;
 }
-export { nestedProperty, sort, quickSort };
+function createSortData(keys) {
+    const sd = [];
+    keys.forEach(key => {
+        const order = key[0] === '-' ? -1 : 1;
+        const nested = key.match(/(\[|\]|\.)/g) ? true : false;
+        sd.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested });
+    });
+    return sd;
+}
+/**
+ * @param index The index to traverse
+ * @param document The document to find
+ *
+ * @return The index of the item
+ */
+function binarySearch(index, document, sortData, lastIndex) {
+    let min = 0;
+    let max = index.length - 1;
+    let i;
+    let d;
+    let comp;
+    while (true) {
+        i = min + Math.floor((max - min) / 2);
+        comp = comparisonFn(sortData, document, index[i]);
+        if (comp === 0)
+            return i;
+        if (comp > 0) {
+            // Move to the right if we can
+            if (i === max)
+                return lastIndex ? i + 1 : -1;
+            min += Math.ceil((max - min + 1) / 2);
+        }
+        else {
+            // Move to the left if we can
+            if (i === min)
+                return lastIndex ? i : -1;
+            max -= Math.ceil((max - min + 1) / 2);
+        }
+    }
+}
+function binaryInsert(index, document, sortData) {
+    const i = binarySearch(index, document, sortData, true);
+    index.splice(i, 0, document);
+}
+export { binaryInsert, binarySearch, createSortData, nestedProperty, sort, quickSort };

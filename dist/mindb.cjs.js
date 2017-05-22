@@ -1,5 +1,117 @@
 'use strict';
 
+function nestedProperty(doc, key) {
+    key = key.replace(/\[(\w+)\]/g, '.$1');
+    key = key.replace(/^\./, '');
+    var parts = key.split('.');
+    var val = doc;
+    parts.forEach(function (k) {
+        // Is k within val?
+        if (!val.hasOwnProperty(k)) throw new Error('Nested property \'' + key + '\' could not be resolved at \'' + k + '\' property.');
+        val = val[k];
+    });
+    return val;
+}
+function sort(documents, sortData) {
+    documents.sort(function (a, b) {
+        return comparisonFn(sortData, a, b);
+    });
+}
+// This function is quite slow!
+function comparisonFn(sortData, a, b) {
+    var l = sortData.length;
+    for (var i = 0; i < l; ++i) {
+        var _sort = sortData[i];
+        var _a = void 0;
+        var _b = void 0;
+        if (_sort.nested) {
+            _a = nestedProperty(a, _sort.key);
+            _b = nestedProperty(b, _sort.key);
+        } else {
+            _a = a[_sort.key];
+            _b = b[_sort.key];
+        }
+        if (_a !== _b) {
+            return (_a > _b ? 1 : -1) * _sort.order;
+        }
+    }
+    return 0;
+}
+function quickSortFn(docs, left, right, sortData) {
+    var iLeft = left;
+    var iRight = right;
+    var dir = true;
+    var pivot = right;
+    while (left - right < 0) {
+        if (dir) {
+            if (comparisonFn(sortData, docs[pivot], docs[left]) < 0) {
+                arraySwap(docs, pivot, left);
+                pivot = left;
+                right--;
+                dir = !dir;
+            } else {
+                left++;
+            }
+        } else {
+            if (comparisonFn(sortData, docs[pivot], docs[right]) <= 0) {
+                right--;
+            } else {
+                arraySwap(docs, pivot, right);
+                pivot = right;
+                left++;
+                dir = !dir;
+            }
+        }
+    }
+    if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, sortData);
+    if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, sortData);
+}
+function arraySwap(a, i, j) {
+    var t = a[i];
+    a[i] = a[j];
+    a[j] = t;
+}
+function createSortData(keys) {
+    var sd = [];
+    keys.forEach(function (key) {
+        var order = key[0] === '-' ? -1 : 1;
+        var nested = key.match(/(\[|\]|\.)/g) ? true : false;
+        sd.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested });
+    });
+    return sd;
+}
+/**
+ * @param index The index to traverse
+ * @param document The document to find
+ *
+ * @return The index of the item
+ */
+function binarySearch(index, document, sortData, lastIndex) {
+    var min = 0;
+    var max = index.length - 1;
+    var i = void 0;
+    var d = void 0;
+    var comp = void 0;
+    while (true) {
+        i = min + Math.floor((max - min) / 2);
+        comp = comparisonFn(sortData, document, index[i]);
+        if (comp === 0) return i;
+        if (comp > 0) {
+            // Move to the right if we can
+            if (i === max) return lastIndex ? i + 1 : -1;
+            min += Math.ceil((max - min + 1) / 2);
+        } else {
+            // Move to the left if we can
+            if (i === min) return lastIndex ? i : -1;
+            max -= Math.ceil((max - min + 1) / 2);
+        }
+    }
+}
+function binaryInsert(index, document, sortData) {
+    var i = binarySearch(index, document, sortData, true);
+    index.splice(i, 0, document);
+}
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -69,24 +181,25 @@ var Index = function () {
     }
 
     createClass(Index, [{
-        key: "empty",
+        key: 'empty',
         value: function empty() {
             this._index.length = 0;
         }
     }, {
-        key: "insert",
+        key: 'insert',
         value: function insert(doc) {
-            if (this._sortData) {
+            if (this._sortData && this._index.length > 0) {
                 // Work out where the doc goes based on the sort data
+                binaryInsert(this._index, doc, this._sortData);
             } else {
                 this._index.push(doc);
             }
         }
     }, {
-        key: "remove",
+        key: 'remove',
         value: function remove(doc) {
             if (this._sortData) {
-                // Work out where the document should be and remove it
+                var i = binarySearch(this._index, doc, this._sortData);
             } else {
                 this._index.splice(this._index.findIndex(function (d) {
                     return d._id === doc._id;
@@ -94,83 +207,13 @@ var Index = function () {
             }
         }
     }, {
-        key: "values",
+        key: 'values',
         value: function values() {
             return this._index;
         }
     }]);
     return Index;
 }();
-
-function nestedProperty(doc, key) {
-    key = key.replace(/\[(\w+)\]/g, '.$1');
-    key = key.replace(/^\./, '');
-    var parts = key.split('.');
-    var val = doc;
-    parts.forEach(function (k) {
-        // Is k within val?
-        if (!val.hasOwnProperty(k)) throw new Error('Nested property \'' + key + '\' could not be resolved at \'' + k + '\' property.');
-        val = val[k];
-    });
-    return val;
-}
-// This function is quite slow!
-function comparisonFn(sortData, a, b) {
-    var l = sortData.length;
-    for (var i = 0; i < l; ++i) {
-        var _sort = sortData[i];
-        var _a = void 0;
-        var _b = void 0;
-        if (_sort.nested) {
-            _a = nestedProperty(a, _sort.key);
-            _b = nestedProperty(b, _sort.key);
-        } else {
-            _a = a[_sort.key];
-            _b = b[_sort.key];
-        }
-        if (_a !== _b) {
-            return (_a > _b ? 1 : -1) * _sort.order;
-        }
-    }
-    return 0;
-}
-function quickSort(documents, sortData) {
-    quickSortFn(documents, 0, documents.length - 1, sortData);
-}
-function quickSortFn(docs, left, right, sortData) {
-    var iLeft = left;
-    var iRight = right;
-    var dir = true;
-    var pivot = right;
-    while (left - right < 0) {
-        if (dir) {
-            if (comparisonFn(sortData, docs[pivot], docs[left]) < 0) {
-                arraySwap(docs, pivot, left);
-                pivot = left;
-                right--;
-                dir = !dir;
-            } else {
-                left++;
-            }
-        } else {
-            if (comparisonFn(sortData, docs[pivot], docs[right]) <= 0) {
-                right--;
-            } else {
-                arraySwap(docs, pivot, right);
-                pivot = right;
-                left++;
-                dir = !dir;
-            }
-        }
-    }
-    if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, sortData);
-    if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, sortData);
-}
-function arraySwap(a, i, j) {
-    var t = a[i];
-    a[i] = a[j];
-    a[j] = t;
-}
 
 var clone = require('clone');
 
@@ -206,11 +249,20 @@ var Query = function () {
         value: function exec() {
             var q = this._data;
             var c = void 0;
+            var usedIndex = false;
             // By ID fetch or whole search
             if (q.byId) {
                 c = [this._collection.get(q.byId)];
             } else {
-                c = this._collection.values();
+                if (q.sort) {
+                    // Get key name of sort
+                    var name = q.sort.map(function (qd) {
+                        return qd.key;
+                    }).join(',');
+                    c = this._collection.values(name);
+                    if (c) usedIndex = true;
+                }
+                if (!c) c = this._collection.values().slice();
                 // Run JS filters
                 if (q.filters) {
                     q.filters.forEach(function (filter) {
@@ -239,8 +291,8 @@ var Query = function () {
                     });
                 }
                 // Run sorts, only if not counting (dont bother sorting!)
-                if (q.sort && !q.count) {
-                    quickSort(c, q.sort);
+                if (q.sort && !q.count && !usedIndex) {
+                    sort(c, q.sort);
                 }
                 // Limit & Offset
                 if (q.limit || q.offset) {
@@ -392,17 +444,12 @@ var Query = function () {
         key: 'sort',
         value: function sort$$1() {
             var data = clone(this._data, false);
-            data.sort = [];
 
             for (var _len3 = arguments.length, keys = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
                 keys[_key3] = arguments[_key3];
             }
 
-            keys.forEach(function (key) {
-                var order = key[0] === '-' ? -1 : 1;
-                var nested = key.match(/(\[|\]|\.)/g) ? true : false;
-                data.sort.push({ key: key.replace(/(\-|\+)/g, ''), order: order, nested: nested });
-            });
+            data.sort = createSortData(keys);
             return new Query(this._collection, data);
         }
     }, {
@@ -436,8 +483,12 @@ var Collection = function () {
     createClass(Collection, [{
         key: 'empty',
         value: function empty() {
+            var _this = this;
+
             this._documents = {};
-            this._indexes[Collection._DEFAULT_INDEX].empty();
+            Object.keys(this._indexes).forEach(function (key) {
+                _this._indexes[key].empty();
+            });
         }
     }, {
         key: 'find',
@@ -462,8 +513,21 @@ var Collection = function () {
             return undefined;
         }
     }, {
+        key: 'index',
+        value: function index() {
+            for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
+                keys[_key] = arguments[_key];
+            }
+
+            var sortData = createSortData(keys);
+            var name = keys.join(',');
+            this._indexes[name] = new Index(name, sortData);
+        }
+    }, {
         key: 'insert',
         value: function insert(document) {
+            var _this2 = this;
+
             var overwrite = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
             // Does the document have an _id?
@@ -475,11 +539,19 @@ var Collection = function () {
                 if (document._id === word) throw new Error('The document _id \'' + document._id + '\' is an internal reserved name and cannot be used.');
             });
             // Is this _id already in the collection?
-            if (!overwrite && document._id in this._documents) throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this.name + '\' collection.');
+            if (document._id in this._documents) {
+                if (overwrite) {
+                    this.remove(document);
+                } else {
+                    throw new Error('The document _id \'' + document._id + '\' already exists within the \'' + this.name + '\' collection.');
+                }
+            }
             // Add the document to the document object
             this._documents[document._id] = document;
-            // Add the document to the __default index
-            this._indexes[Collection._DEFAULT_INDEX].insert(document);
+            // Add the document to all indexes
+            Object.keys(this._indexes).forEach(function (key) {
+                _this2._indexes[key].insert(document);
+            });
             // Return the document
             return document;
         }
@@ -491,18 +563,20 @@ var Collection = function () {
     }, {
         key: 'remove',
         value: function remove(a) {
-            var _this = this;
+            var _this3 = this;
 
             if (!a) throw new Error('No argument provided to remove from collection.');
             if (Array.isArray(a)) {
                 a.forEach(function (doc) {
-                    _this.remove(doc);
+                    _this3.remove(doc);
                 });
             } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object' && '_id' in a) {
                 // Delete from dictionary
                 delete this._documents[a._id];
-                // Delete from index
-                this._indexes[Collection._DEFAULT_INDEX].remove(a);
+                // Delete from indexes
+                Object.keys(this._indexes).forEach(function (key) {
+                    _this3._indexes[key].remove(a);
+                });
             } else if (typeof a === 'string') {
                 var doc = this.get(a);
                 if (doc) this.remove(doc);
@@ -517,8 +591,10 @@ var Collection = function () {
         }
     }, {
         key: 'values',
-        value: function values() {
-            return this._indexes[Collection._DEFAULT_INDEX].values();
+        value: function values(name) {
+            if (!name) return this._indexes[Collection._DEFAULT_INDEX].values();
+            if (name in this._indexes) return this._indexes[name].values();
+            return undefined;
         }
     }]);
     return Collection;
