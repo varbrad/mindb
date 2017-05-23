@@ -2,8 +2,7 @@
 
 const expect = require('unexpected')
 
-require('ts-node/register')
-const MinDB = require('../src/main').default
+const MinDB = require('../dist/mindb.cjs')
 
 describe('MinDB.Collection', () => {
   let col
