@@ -11,6 +11,22 @@ function nestedProperty(doc, key) {
     });
     return val;
 }
+function sortDocuments(documents, sortData, algorithm) {
+    switch (algorithm) {
+        case 'insertion':
+            insertionSort(documents, sortData);
+            return;
+        case 'native':
+            sort(documents, sortData);
+            return;
+        case 'quick':
+            quickSort(documents, sortData);
+            return;
+        default:
+            sort(documents, sortData);
+            return;
+    }
+}
 function sort(documents, sortData) {
     documents.sort(evalCompare(sortData));
 }
@@ -46,11 +62,20 @@ function evalCompare(sortData) {
     str += `return 0;`;
     return Function('a', 'b', str);
 }
-function quickSort(documents, sortData) {
-    quickSortFn(documents, 0, documents.length - 1, sortData);
+function insertionSort(documents, sortData) {
+    const compare = evalCompare(sortData);
+    for (let i = 1; i < documents.length; ++i) {
+        let j = i;
+        while (j > 0 && compare(documents[j - 1], documents[j]) > 0) {
+            arraySwap(documents, j, j - 1);
+            j--;
+        }
+    }
 }
-function quickSortFn(docs, left, right, sortData) {
-    const compare = comparisonFn(sortData);
+function quickSort(documents, sortData) {
+    quickSortFn(documents, 0, documents.length - 1, evalCompare(sortData));
+}
+function quickSortFn(docs, left, right, compare) {
     const iLeft = left;
     const iRight = right;
     let dir = true;
@@ -80,9 +105,9 @@ function quickSortFn(docs, left, right, sortData) {
         }
     }
     if (pivot - 1 > iLeft)
-        quickSortFn(docs, iLeft, pivot - 1, sortData);
+        quickSortFn(docs, iLeft, pivot - 1, compare);
     if (pivot + 1 < iRight)
-        quickSortFn(docs, pivot + 1, iRight, sortData);
+        quickSortFn(docs, pivot + 1, iRight, compare);
 }
 function arraySwap(a, i, j) {
     const t = a[i];
@@ -101,6 +126,8 @@ function createSortData(keys) {
 /**
  * @param index The index to traverse
  * @param document The document to find
+ * @param sortData The sorting data for the index
+ * @param lastIndex Whether to return the insertion index (false for search, true for insert)
  *
  * @return The index of the item
  */
@@ -130,8 +157,4 @@ function binarySearch(index, document, sortData, lastIndex) {
         }
     }
 }
-function binaryInsert(index, document, sortData) {
-    const i = binarySearch(index, document, sortData, true);
-    index.splice(i, 0, document);
-}
-export { binaryInsert, binarySearch, createSortData, nestedProperty, sort, quickSort };
+export { binarySearch, createSortData, nestedProperty, sortDocuments };

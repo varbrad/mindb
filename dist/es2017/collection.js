@@ -7,7 +7,10 @@ class Collection {
         this.name = name;
         this.schema = schema;
         this._documents = {};
-        this._indexes = { [Collection._DEFAULT_INDEX]: new Index(Collection._DEFAULT_INDEX) };
+        this._indexes = { [Collection._DEFAULT_INDEX]: new Index(this, Collection._DEFAULT_INDEX) };
+    }
+    count() {
+        return this.find().count();
     }
     empty() {
         this._documents = {};
@@ -39,8 +42,8 @@ class Collection {
     }
     index(...keys) {
         const sortData = createSortData(keys);
-        const name = keys.join(',');
-        this._indexes[name] = new Index(name, sortData);
+        const name = keys.map(k => k.replace(/^\+/, '')).join(',');
+        this._indexes[name] = new Index(this, name, sortData);
     }
     insert(document, overwrite = false) {
         // Does the document have an _id?
@@ -108,8 +111,11 @@ class Collection {
         return this.insert(document, true);
     }
     values(name) {
-        if (!name)
+        if (!name) {
+            if (!this._indexes || !(Collection._DEFAULT_INDEX in this._indexes))
+                return undefined;
             return this._indexes[Collection._DEFAULT_INDEX].values();
+        }
         if (name in this._indexes)
             return this._indexes[name].values();
         return undefined;

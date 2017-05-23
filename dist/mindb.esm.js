@@ -10,6 +10,22 @@ function nestedProperty(doc, key) {
     });
     return val;
 }
+function sortDocuments(documents, sortData, algorithm) {
+    switch (algorithm) {
+        case 'insertion':
+            insertionSort(documents, sortData);
+            return;
+        case 'native':
+            sort(documents, sortData);
+            return;
+        case 'quick':
+            quickSort(documents, sortData);
+            return;
+        default:
+            sort(documents, sortData);
+            return;
+    }
+}
 function sort(documents, sortData) {
     documents.sort(evalCompare(sortData));
 }
@@ -44,8 +60,20 @@ function evalCompare(sortData) {
     str += 'return 0;';
     return Function('a', 'b', str);
 }
-function quickSortFn(docs, left, right, sortData) {
-    var compare = comparisonFn(sortData);
+function insertionSort(documents, sortData) {
+    var compare = evalCompare(sortData);
+    for (var i = 1; i < documents.length; ++i) {
+        var j = i;
+        while (j > 0 && compare(documents[j - 1], documents[j]) > 0) {
+            arraySwap(documents, j, j - 1);
+            j--;
+        }
+    }
+}
+function quickSort(documents, sortData) {
+    quickSortFn(documents, 0, documents.length - 1, evalCompare(sortData));
+}
+function quickSortFn(docs, left, right, compare) {
     var iLeft = left;
     var iRight = right;
     var dir = true;
@@ -71,8 +99,8 @@ function quickSortFn(docs, left, right, sortData) {
             }
         }
     }
-    if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, sortData);
-    if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, sortData);
+    if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, compare);
+    if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, compare);
 }
 function arraySwap(a, i, j) {
     var t = a[i];
@@ -91,6 +119,8 @@ function createSortData(keys) {
 /**
  * @param index The index to traverse
  * @param document The document to find
+ * @param sortData The sorting data for the index
+ * @param lastIndex Whether to return the insertion index (false for search, true for insert)
  *
  * @return The index of the item
  */
@@ -115,10 +145,6 @@ function binarySearch(index, document, sortData, lastIndex) {
             max -= Math.ceil((max - min + 1) / 2);
         }
     }
-}
-function binaryInsert(index, document, sortData) {
-    var i = binarySearch(index, document, sortData, true);
-    index.splice(i, 0, document);
 }
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -181,12 +207,16 @@ var defineProperty = function (obj, key, value) {
 };
 
 var Index = function () {
-    function Index(name, sortData) {
+    function Index(collection, name, sortData) {
         classCallCheck(this, Index);
 
+        this._collection = collection;
         this.name = name;
-        this._index = [];
+        this._index = this._collection.values() || [];
         this._sortData = sortData;
+        if (this._sortData) {
+            sortDocuments(this._index, this._sortData);
+        }
     }
 
     createClass(Index, [{
@@ -199,7 +229,8 @@ var Index = function () {
         value: function insert(doc) {
             if (this._sortData && this._index.length > 0) {
                 // Work out where the doc goes based on the sort data
-                binaryInsert(this._index, doc, this._sortData);
+                var i = binarySearch(this._index, doc, this._sortData, true);
+                this._index.splice(i, 0, doc);
             } else {
                 this._index.push(doc);
             }
@@ -209,6 +240,7 @@ var Index = function () {
         value: function remove(doc) {
             if (this._sortData) {
                 var i = binarySearch(this._index, doc, this._sortData);
+                this._index.splice(i, 1);
             } else {
                 this._index.splice(this._index.findIndex(function (d) {
                     return d._id === doc._id;
@@ -218,7 +250,7 @@ var Index = function () {
     }, {
         key: 'values',
         value: function values() {
-            return this._index;
+            return this._index.slice();
         }
     }]);
     return Index;
@@ -258,20 +290,42 @@ var Query = function () {
         value: function exec() {
             var q = this._data;
             var c = void 0;
-            var usedIndex = false;
+            var usedIndex = void 0;
+            var usedFullIndex = false;
             // By ID fetch or whole search
             if (q.byId) {
                 c = [this._collection.get(q.byId)];
             } else {
                 if (q.sort) {
-                    // Get key name of sort
-                    var name = q.sort.map(function (qd) {
-                        return qd.key;
-                    }).join(',');
-                    c = this._collection.values(name);
-                    if (c) usedIndex = true;
+                    // Try and get a matching index from the indexes which can reversed for a full index match
+                    // E.g. index('value') -> sort('value') <- full match
+                    // index('-value') -> sort('value') <- full match (reversed)
+                    // index('value', 'data') -> sort('-value', '-data') <- full match (reversed)
+                    var sortData = q.sort.slice();
+                    usedFullIndex = true;
+                    while (sortData.length > 0 || c === undefined) {
+                        var sameName = sortData.map(function (qd) {
+                            return (qd.order === -1 ? '-' : '') + qd.key;
+                        }).join(',');
+                        var reverseName = sortData.map(function (qd) {
+                            return (qd.order === -1 ? '' : '-') + qd.key;
+                        }).join(',');
+                        c = this._collection.values(sameName);
+                        if (c) {
+                            usedIndex = sameName;
+                            break;
+                        }
+                        c = this._collection.values(reverseName);
+                        if (c) {
+                            usedIndex = reverseName;
+                            c = c.reverse();
+                            break;
+                        }
+                        usedFullIndex = false;
+                        sortData.pop();
+                    }
                 }
-                if (!c) c = this._collection.values().slice();
+                if (!c) c = this._collection.values();
                 // Run JS filters
                 if (q.filters) {
                     q.filters.forEach(function (filter) {
@@ -300,8 +354,8 @@ var Query = function () {
                     });
                 }
                 // Run sorts, only if not counting (dont bother sorting!)
-                if (q.sort && !q.count && !usedIndex) {
-                    sort(c, q.sort);
+                if (q.sort && !q.count && !(usedIndex && usedFullIndex)) {
+                    if (usedIndex && !usedFullIndex) sortDocuments(c, q.sort, 'insertion');else sortDocuments(c, q.sort, 'native');
                 }
                 // Limit & Offset
                 if (q.limit || q.offset) {
@@ -451,7 +505,7 @@ var Query = function () {
         }
     }, {
         key: 'sort',
-        value: function sort$$1() {
+        value: function sort() {
             var data = clone(this._data, false);
 
             for (var _len3 = arguments.length, keys = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
@@ -486,10 +540,15 @@ var Collection = function () {
         this.name = name;
         this.schema = schema;
         this._documents = {};
-        this._indexes = defineProperty({}, Collection._DEFAULT_INDEX, new Index(Collection._DEFAULT_INDEX));
+        this._indexes = defineProperty({}, Collection._DEFAULT_INDEX, new Index(this, Collection._DEFAULT_INDEX));
     }
 
     createClass(Collection, [{
+        key: 'count',
+        value: function count() {
+            return this.find().count();
+        }
+    }, {
         key: 'empty',
         value: function empty() {
             var _this = this;
@@ -529,8 +588,10 @@ var Collection = function () {
             }
 
             var sortData = createSortData(keys);
-            var name = keys.join(',');
-            this._indexes[name] = new Index(name, sortData);
+            var name = keys.map(function (k) {
+                return k.replace(/^\+/, '');
+            }).join(',');
+            this._indexes[name] = new Index(this, name, sortData);
         }
     }, {
         key: 'insert',
@@ -603,7 +664,10 @@ var Collection = function () {
     }, {
         key: 'values',
         value: function values(name) {
-            if (!name) return this._indexes[Collection._DEFAULT_INDEX].values();
+            if (!name) {
+                if (!this._indexes || !(Collection._DEFAULT_INDEX in this._indexes)) return undefined;
+                return this._indexes[Collection._DEFAULT_INDEX].values();
+            }
             if (name in this._indexes) return this._indexes[name].values();
             return undefined;
         }

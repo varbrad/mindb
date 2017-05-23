@@ -1,4 +1,4 @@
-import { createSortData, sort } from './utils';
+import { createSortData, sortDocuments } from './utils';
 const clone = require('clone');
 class Query {
     constructor(collection, data) {
@@ -21,21 +21,40 @@ class Query {
     exec() {
         const q = this._data;
         let c;
-        let usedIndex = false;
+        let usedIndex;
+        let usedFullIndex = false;
         // By ID fetch or whole search
         if (q.byId) {
             c = [this._collection.get(q.byId)];
         }
         else {
             if (q.sort) {
-                // Get key name of sort
-                const name = q.sort.map(qd => qd.key).join(',');
-                c = this._collection.values(name);
-                if (c)
-                    usedIndex = true;
+                // Try and get a matching index from the indexes which can reversed for a full index match
+                // E.g. index('value') -> sort('value') <- full match
+                // index('-value') -> sort('value') <- full match (reversed)
+                // index('value', 'data') -> sort('-value', '-data') <- full match (reversed)
+                let sortData = q.sort.slice();
+                usedFullIndex = true;
+                while (sortData.length > 0 || c === undefined) {
+                    const sameName = sortData.map(qd => (qd.order === -1 ? '-' : '') + qd.key).join(',');
+                    const reverseName = sortData.map(qd => (qd.order === -1 ? '' : '-') + qd.key).join(',');
+                    c = this._collection.values(sameName);
+                    if (c) {
+                        usedIndex = sameName;
+                        break;
+                    }
+                    c = this._collection.values(reverseName);
+                    if (c) {
+                        usedIndex = reverseName;
+                        c = c.reverse();
+                        break;
+                    }
+                    usedFullIndex = false;
+                    sortData.pop();
+                }
             }
             if (!c)
-                c = this._collection.values().slice();
+                c = this._collection.values();
             // Run JS filters
             if (q.filters) {
                 q.filters.forEach(filter => {
@@ -58,8 +77,11 @@ class Query {
                 });
             }
             // Run sorts, only if not counting (dont bother sorting!)
-            if (q.sort && !q.count && !usedIndex) {
-                sort(c, q.sort);
+            if (q.sort && !q.count && !(usedIndex && usedFullIndex)) {
+                if (usedIndex && !usedFullIndex)
+                    sortDocuments(c, q.sort, 'insertion');
+                else
+                    sortDocuments(c, q.sort, 'native');
             }
             // Limit & Offset
             if (q.limit || q.offset) {
