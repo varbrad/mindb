@@ -321,7 +321,7 @@ var Query = function () {
             if (q.byId) {
                 c = [this._collection.get(q.byId)];
             } else {
-                if (q.sort) {
+                if (q.sort && !q.count) {
                     // Try and get a matching index from the indexes which can reversed for a full index match
                     // E.g. index('value') -> sort('value') <- full match
                     // index('-value') -> sort('value') <- full match (reversed)
@@ -388,7 +388,7 @@ var Query = function () {
                 }
             }
             // Apply select
-            if (q.select) {
+            if (!q.count && q.select) {
                 c = c.map(function (doc) {
                     var o = { _id: doc._id };
                     q.select.forEach(function (key) {
@@ -435,6 +435,10 @@ var Query = function () {
     }, {
         key: 'limit',
         value: function limit(m) {
+            if (m === undefined) throw new Error('No result limit specified on query.');
+            if (typeof m !== 'number') throw new Error('Limit value must be a "number", not a "' + (typeof m === 'undefined' ? 'undefined' : _typeof(m)) + '".');
+            if (m % 1 !== 0) throw new Error('Result limit must be a whole number.');
+            if (m < 1) throw new Error('Result limit must be larger than 0.');
             var data = clone(this._data, false);
             data.limit = m;
             return new Query(this._collection, data);
@@ -472,6 +476,10 @@ var Query = function () {
     }, {
         key: 'offset',
         value: function offset(n) {
+            if (n === undefined) throw new Error('No result offset specified on query.');
+            if (typeof n !== 'number') throw new Error('Offset value must be a "number", not a "' + (typeof n === 'undefined' ? 'undefined' : _typeof(n)) + '".');
+            if (n % 1 !== 0) throw new Error('Result offset must be a whole number.');
+            if (n < 0) throw new Error('Result offset must be larger than or equal to 0.');
             var data = clone(this._data, false);
             data.offset = n;
             return new Query(this._collection, data);

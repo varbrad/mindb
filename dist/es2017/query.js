@@ -28,7 +28,7 @@ class Query {
             c = [this._collection.get(q.byId)];
         }
         else {
-            if (q.sort) {
+            if (q.sort && !q.count) {
                 // Try and get a matching index from the indexes which can reversed for a full index match
                 // E.g. index('value') -> sort('value') <- full match
                 // index('-value') -> sort('value') <- full match (reversed)
@@ -89,7 +89,7 @@ class Query {
             }
         }
         // Apply select
-        if (q.select) {
+        if (!q.count && q.select) {
             c = c.map(doc => {
                 const o = { _id: doc._id };
                 q.select.forEach(key => o[key] = doc[key]);
@@ -123,6 +123,14 @@ class Query {
         return this.eq(value);
     }
     limit(m) {
+        if (m === undefined)
+            throw new Error(`No result limit specified on query.`);
+        if (typeof m !== 'number')
+            throw new Error(`Limit value must be a "number", not a "${typeof m}".`);
+        if (m % 1 !== 0)
+            throw new Error(`Result limit must be a whole number.`);
+        if (m < 1)
+            throw new Error(`Result limit must be larger than 0.`);
         const data = clone(this._data, false);
         data.limit = m;
         return new Query(this._collection, data);
@@ -146,6 +154,14 @@ class Query {
         return this.ne(value);
     }
     offset(n) {
+        if (n === undefined)
+            throw new Error(`No result offset specified on query.`);
+        if (typeof n !== 'number')
+            throw new Error(`Offset value must be a "number", not a "${typeof n}".`);
+        if (n % 1 !== 0)
+            throw new Error(`Result offset must be a whole number.`);
+        if (n < 0)
+            throw new Error(`Result offset must be larger than or equal to 0.`);
         const data = clone(this._data, false);
         data.offset = n;
         return new Query(this._collection, data);
