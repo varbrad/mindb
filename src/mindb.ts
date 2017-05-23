@@ -1,10 +1,12 @@
 import { Database, createDatabaseProxy } from './database'
 import { Collection } from './collection'
+import { Index } from './index'
 import { Query } from './query'
 
 class MinDB {
   public Database:(typeof Database) = Database
   public Collection:(typeof Collection) = Collection
+  public Index:(typeof Index) = Index
   public Query:(typeof Query) = Query
 
   private static _RESERVED:string[] = [
