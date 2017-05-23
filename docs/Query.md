@@ -25,6 +25,9 @@ const clx = MinDB.db.clx
 clx.find().exec() // Returns a list of all documents within the collection
 ````
 
+## Sorting
+See the dedicated [Sorting documentation](./Sorting.md).
+
 ## Where
 The `where()` method allows for powerful filtering of contents based upon various conditions.
 
@@ -75,6 +78,50 @@ If you only want to know the number of matching documents based upon a query, yo
 ````javascript
 const ctx = MinDB.db.ctx
 const total = ctx.find().where('age').lt(40).count().exec() // Will be a number
+````
+
+Alternatively, the [Collection](./Collection.md) itself exposes the `count()` method which works much the same way.
+
+````javascript
+const ctx = MinDB.db.ctx
+const total = ctx.count().where('age').lt('40').exec() // Will be a number
+````
+
+## Limiting Results
+It is possible to limit the maximum total number of results that are returned via `limit()`.
+
+````javascript
+const ctx = MinDB.db.ctx
+ctx.find().where('city').is('London').limit(5).exec() // Will only return 0 <= n <= 5 results.
+````
+
+__Note:__ If the limit is set to just one (via `limit(1)`, `.one()` or the collection `.findOne()`) then a single document (or `undefined` if no matches) will be returned, rather than an array of documents.
+
+## Offsetting Results
+It is also possible to offset the result set via `offset()`. When used with `limit()`, this can provide good pagination capabilities.
+
+````javascript
+const page = 2
+const resultsPerPage = 10
+const ctx = MinDB.db.ctx
+ctx.find().offset((page - 1) * resultsPerPage).limit(resultsPerPage).exec()
+````
+
+## Select
+It may only be desriable to return an object with particular properties of the original document. This can be achieved via the `select()` method.
+
+__Note:__ You do not need to `select` the '_id' property, this is always included in any returned results.
+
+````javascript
+const ctx = MinDB.db.ctx
+ctx.insert({ _id: 'bob', name: 'Bob', age: 30, gender: 'M', height: 177 })
+ctx.findOne('bob').select('name').exec() // { _id: 'bob', name: 'Bob' }
+````
+
+````javascript
+const ctx = MinDB.db.ctx
+ctx.insert({ _id: 'alice', name: 'Alice', age: 22, gender: 'F', height: 165 })
+ctx.find().select('name', 'height').exec() // [ { _id: 'alice', name: 'Alice', height: 165 } ]
 ````
 
 # Examples

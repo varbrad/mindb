@@ -66,7 +66,7 @@ doc1 === doc2 // true
 The `get()` function is more strict with it's usage. It will throw an error if the given `_id` is not a string or is empty. Both methods will return `undefined` if the given `_id` could not be found within the collection.
 
 ## Retrieval (Query)
-MinDB features a powerful query system (via `find()` or `findOne()`) that allows you to query the collection for data.
+MinDB features a powerful query system (via `find()`, `findOne()` and `count()`) that allows you to query the collection for data.
 
 ````javascript
 MinDB.create('a').collection('b')
@@ -79,7 +79,7 @@ const result = MinDB.a.b.find().where('value').gte(8).sort('-value').exec()
 // [ { _id: 'id9', value: 9 }, { _id: 'id8', value: 8 } ]
 ````
 
-The query system and what it can do is explained in much more detail here.
+The query system and what it can do is explained in much more detail in the [Query documentation page](./Query.md)
 
 ## Remove
 Allows for data to be deleted from the collection.
