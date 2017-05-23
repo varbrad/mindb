@@ -35,7 +35,7 @@ class Collection {
     this.name = name
     this.schema = schema
     this._documents = {}
-    this._indexes = { [Collection._DEFAULT_INDEX]: new Index(Collection._DEFAULT_INDEX) }
+    this._indexes = { [Collection._DEFAULT_INDEX]: new Index(this, Collection._DEFAULT_INDEX) }
   }
 
   public count ():Query {
@@ -71,8 +71,8 @@ class Collection {
 
   public index (...keys:string[]):void {
     const sortData = createSortData(keys)
-    const name = keys.join(',')
-    this._indexes[name] = new Index(name, sortData)
+    const name = keys.map(k => k.replace(/^\+/, '')).join(',')
+    this._indexes[name] = new Index(this, name, sortData)
   }
 
   public insert (document:Document, overwrite:boolean = false):Document {
@@ -137,7 +137,10 @@ class Collection {
   }
 
   public values (name?:string):Document[] {
-    if (!name) return this._indexes[Collection._DEFAULT_INDEX].values()
+    if (!name) {
+      if (!this._indexes || !(Collection._DEFAULT_INDEX in this._indexes)) return undefined
+      return this._indexes[Collection._DEFAULT_INDEX].values()
+    }
     if (name in this._indexes) return this._indexes[name].values()
     return undefined
   }

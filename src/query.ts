@@ -35,18 +35,38 @@ class Query {
   exec ():number|Document|Document[] {
     const q:QueryData = this._data
     let c:Document[]
-    let usedIndex:boolean = false
+    let usedIndex:string
+    let usedFullIndex:boolean = false
     // By ID fetch or whole search
     if (q.byId) {
       c = [ this._collection.get(q.byId) ]
     } else {
       if (q.sort) {
-        // Get key name of sort
-        const name = q.sort.map(qd => qd.key).join(',')
-        c = this._collection.values(name)
-        if (c) usedIndex = true
+        // Try and get a matching index from the indexes which can reversed for a full index match
+        // E.g. index('value') -> sort('value') <- full match
+        // index('-value') -> sort('value') <- full match (reversed)
+        // index('value', 'data') -> sort('-value', '-data') <- full match (reversed)
+        let sortData = q.sort.slice()
+        usedFullIndex = true
+        while (sortData.length > 0 || c === undefined) {
+          const sameName = sortData.map(qd => (qd.order === -1 ? '-' : '') + qd.key).join(',')
+          const reverseName = sortData.map(qd => (qd.order === -1 ? '' : '-') + qd.key).join(',')
+          c = this._collection.values(sameName)
+          if (c) {
+            usedIndex = sameName
+            break
+          }
+          c = this._collection.values(reverseName)
+          if (c) {
+            usedIndex = reverseName
+            c = c.reverse()
+            break
+          }
+          usedFullIndex = false
+          sortData.pop()
+        }
       }
-      if (!c) c = this._collection.values().slice()
+      if (!c) c = this._collection.values()
       // Run JS filters
       if (q.filters) {
         q.filters.forEach(filter => {
@@ -69,8 +89,11 @@ class Query {
         })
       }
       // Run sorts, only if not counting (dont bother sorting!)
-      if (q.sort && !q.count && !usedIndex) {
-        sortDocuments(c, q.sort)
+      if (q.sort && !q.count && !(usedIndex && usedFullIndex)) {
+        if (usedIndex && !usedFullIndex) // Near-sorted
+          sortDocuments(c, q.sort, 'insertion')
+        else // Not sorted at all
+          sortDocuments(c, q.sort, 'native')
       }
       // Limit & Offset
       if (q.limit || q.offset) {

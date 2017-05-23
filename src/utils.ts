@@ -15,8 +15,9 @@ function nestedProperty(doc:Document, key:string):any {
   return val
 }
 
-function sortDocuments (documents:Document[], sortData:SortData[], algorithm?:'native'|'quick'):void {
+function sortDocuments (documents:Document[], sortData:SortData[], algorithm?:'native'|'quick'|'insertion'):void {
   switch(algorithm) {
+    case 'insertion': insertionSort(documents, sortData); return
     case 'native': sort(documents, sortData); return
     case 'quick': quickSort(documents, sortData); return
     default: sort(documents, sortData); return
@@ -58,6 +59,17 @@ function evalCompare (sortData:SortData[]):((a:Document, b:Document) => number) 
   })
   str += `return 0;`
   return <((a:Document, b:Document) => number)>Function('a', 'b', str)
+}
+
+function insertionSort (documents:Document[], sortData:SortData[]):void {
+  const compare = evalCompare(sortData)
+  for (let i = 1; i < documents.length; ++i) {
+    let j = i
+    while (j > 0 && compare(documents[j-1], documents[j]) > 0) {
+      arraySwap(documents, j, j - 1)
+      j--
+    }
+  }
 }
 
 function quickSort (documents:Document[], sortData:SortData[]):void {
@@ -113,6 +125,8 @@ function createSortData (keys:string[]):SortData[] {
 /**
  * @param index The index to traverse
  * @param document The document to find
+ * @param sortData The sorting data for the index
+ * @param lastIndex Whether to return the insertion index (false for search, true for insert)
  *
  * @return The index of the item
  */
@@ -139,9 +153,4 @@ function binarySearch (index:Document[], document:Document, sortData:SortData[],
   }
 }
 
-function binaryInsert (index:Document[], document:Document, sortData:SortData[]):void {
-  const i = binarySearch(index, document, sortData, true)
-  index.splice(i, 0, document)
-}
-
-export { binaryInsert, binarySearch, createSortData, nestedProperty, sortDocuments }
+export { binarySearch, createSortData, nestedProperty, sortDocuments }
