@@ -41,7 +41,7 @@ class Query {
     if (q.byId) {
       c = [ this._collection.get(q.byId) ]
     } else {
-      if (q.sort) {
+      if (q.sort && !q.count) {
         // Try and get a matching index from the indexes which can reversed for a full index match
         // E.g. index('value') -> sort('value') <- full match
         // index('-value') -> sort('value') <- full match (reversed)
@@ -101,7 +101,7 @@ class Query {
       }
     }
     // Apply select
-    if (q.select) {
+    if (!q.count && q.select) {
       c = c.map(doc => {
         const o:Document = { _id: doc._id }
         q.select.forEach(key => o[key] = doc[key])
