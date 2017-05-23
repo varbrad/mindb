@@ -3,7 +3,7 @@ import { Document } from './document'
 
 import { QueryData, WheresData } from './types/types'
 
-import { createSortData, sort } from './utils'
+import { createSortData, sortDocuments } from './utils'
 
 const clone = require('clone')
 
@@ -70,7 +70,7 @@ class Query {
       }
       // Run sorts, only if not counting (dont bother sorting!)
       if (q.sort && !q.count && !usedIndex) {
-        sort(c, q.sort)
+        sortDocuments(c, q.sort)
       }
       // Limit & Offset
       if (q.limit || q.offset) {

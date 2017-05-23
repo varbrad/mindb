@@ -15,6 +15,14 @@ function nestedProperty(doc:Document, key:string):any {
   return val
 }
 
+function sortDocuments (documents:Document[], sortData:SortData[], algorithm?:'native'|'quick'):void {
+  switch(algorithm) {
+    case 'native': sort(documents, sortData); return
+    case 'quick': quickSort(documents, sortData); return
+    default: sort(documents, sortData); return
+  }
+}
+
 function sort (documents:Document[], sortData:SortData[]):void {
   documents.sort(evalCompare(sortData))
 }
@@ -53,11 +61,10 @@ function evalCompare (sortData:SortData[]):((a:Document, b:Document) => number) 
 }
 
 function quickSort (documents:Document[], sortData:SortData[]):void {
-  quickSortFn(documents, 0, documents.length - 1, sortData)
+  quickSortFn(documents, 0, documents.length - 1, evalCompare(sortData))
 }
 
-function quickSortFn (docs:Document[], left:number, right:number, sortData:SortData[]):void {
-  const compare = comparisonFn(sortData)
+function quickSortFn (docs:Document[], left:number, right:number, compare:((a:Document, b:Document) => number)):void {
   const iLeft = left
   const iRight = right
   let dir = true
@@ -83,8 +90,8 @@ function quickSortFn (docs:Document[], left:number, right:number, sortData:SortD
       }
     }
   }
-  if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, sortData)
-  if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, sortData)
+  if (pivot - 1 > iLeft) quickSortFn(docs, iLeft, pivot - 1, compare)
+  if (pivot + 1 < iRight) quickSortFn(docs, pivot + 1, iRight, compare)
 }
 
 function arraySwap (a:any[], i:number, j:number) {
@@ -137,4 +144,4 @@ function binaryInsert (index:Document[], document:Document, sortData:SortData[])
   index.splice(i, 0, document)
 }
 
-export { binaryInsert, binarySearch, createSortData, nestedProperty, sort, quickSort }
+export { binaryInsert, binarySearch, createSortData, nestedProperty, sortDocuments }
