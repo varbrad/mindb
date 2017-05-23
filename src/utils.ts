@@ -15,9 +15,10 @@ function nestedProperty(doc:Document, key:string):any {
   return val
 }
 
-function sortDocuments (documents:Document[], sortData:SortData[], algorithm?:'native'|'quick'|'insertion'):void {
+function sortDocuments (documents:Document[], sortData:SortData[], algorithm?:'native'|'quick'|'insertion'|'heap'):void {
   switch(algorithm) {
     case 'insertion': insertionSort(documents, sortData); return
+    case 'heap': heapSort(documents, sortData); return
     case 'native': sort(documents, sortData); return
     case 'quick': quickSort(documents, sortData); return
     default: sort(documents, sortData); return
@@ -69,6 +70,30 @@ function insertionSort (documents:Document[], sortData:SortData[]):void {
       arraySwap(documents, j, j - 1)
       j--
     }
+  }
+}
+
+function heapSort (documents:Document[], sortData:SortData[]):void {
+  const compare = evalCompare(sortData)
+  let len = documents.length
+  for (let i = Math.floor(len * .5); i > -1; --i) heapify(documents, i, len, compare)
+  for (let i = documents.length - 1; i > 0; --i) {
+    arraySwap(documents, 0, i)
+    len--
+    heapify(documents, 0, len, compare)
+  }
+}
+
+function heapify (documents:Document[], i:number, len:number, compare:((a:Document, b:Document) => number)):void {
+  const l = 2 * i + 1
+  const r = 2 * i + 2
+  let largest = i
+
+  if (l < len && compare(documents[l], documents[largest]) > 0) largest = l
+  if (r < len && compare(documents[r], documents[largest]) > 0) largest = r
+  if (largest !== i) {
+    arraySwap(documents, i, largest)
+    heapify(documents, largest, len, compare)
   }
 }
 
