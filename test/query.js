@@ -12,7 +12,7 @@ describe('MinDB.Query', () => {
     MinDB.reset()
     col = MinDB.create('db').collection('col')
     for (let i = 0; i < 500; ++i) {
-      col.insert({ _id: 'doc' + i, i: i, k: i % 2, data: Math.random(), obj: { a: Math.random() }, arr: [ Math.random(), Math.random(), Math.random() ] })
+      col.insert({ _id: 'doc' + i, i: i, k: i % 2, data: Math.random(), val: Math.random() > 0.5 ? -5 : 5, obj: { a: Math.random() }, arr: [ Math.random(), Math.random(), Math.random() ] })
     }
   })
 
@@ -75,7 +75,9 @@ describe('MinDB.Query', () => {
 
   describe('#gte()', () => {
     it('Should only match properties with values greater than or equal to the given value', () => {
-      expect(col.list().length, 'to be greater than', col.find().where('data').gte(0.5).count().exec())
+      col.find().where('data').gte(0.3).exec().forEach(d => {
+        expect(d.data, 'to be greater than or equal to', 0.3)
+      })
     })
   })
 
@@ -92,31 +94,115 @@ describe('MinDB.Query', () => {
     it('Should return one document (as Document) when using findOne() on Collection', () => {
       expect(col.findOne().exec(), 'to have keys', '_id', 'i')
     })
-    it('Should throw an error on limit of less than 1')
-    it('Should throw an error if limit is a non-number')
+    it('Should throw an error on limit of less than 1', () => {
+      let err
+      try {
+        col.find().limit(0).exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if limit is a non-number', () => {
+      let err
+      try {
+        col.find().limit('bob').exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if limit isn\'t a whole number', () => {
+      let err
+      try {
+        col.find().limit(1.2).exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if limit isn\'t defined', () => {
+      let err
+      try {
+        col.find().limit().exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
   })
 
   describe('#lt()', () => {
-    it('Should only match properties with values less than the given value')
+    it('Should only match properties with values less than the given value', () => {
+      col.find().where('data').lt(0.5).exec().forEach(d => {
+        expect(d.data, 'to be less than', 0.5)
+      })
+    })
   })
 
   describe('#lte()', () => {
-    it('Should only match properties with values less than or equal to the given value')
+    it('Should only match properties with values less than or equal to the given value', () => {
+      col.find().where('data').lte(0.6).exec().forEach(d => {
+        expect(d.data, 'to be less than or equal to', 0.6)
+      })
+    })
   })
 
   describe('#ne(), #not()', () => {
-    it('Should only match properties with values not equal to the given value')
+    it('Should only match properties with values not equal to the given value', () => {
+      col.find().where('k').not(1).exec().forEach(d => {
+        expect(d.k, 'not to be', 1)
+      })
+    })
   })
 
   describe('#neg(), #negative()', () => {
-    it('Should only match properties with negative values')
+    it('Should only match properties with negative values', () => {
+      col.find().where('val').neg().exec().forEach(d => {
+        expect(d.val, 'to be negative')
+      })
+    })
   })
 
   describe('#offset()', () => {
     it('Should offset the result set by ten documents')
     it('Should offset the result set by twenty documents')
-    it('Should throw an error if offset by a negative number')
-    it('Should throw an error if offset by a non-number')
+    it('Should throw an error if offset by a negative number', () => {
+      let err
+      try {
+        col.find().offset(-2).exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if offset is a non-number', () => {
+      let err
+      try {
+        col.find().offset(new Date()).exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if offset isn\'t a whole number', () => {
+      let err
+      try {
+        col.find().offset(1 / 3).exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+    it('Should throw an error if offset isn\'t defined', () => {
+      let err
+      try {
+        col.find().offset().exec()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
   })
 
   describe('#populate()', () => {
@@ -125,12 +211,22 @@ describe('MinDB.Query', () => {
   })
 
   describe('#pos(), #positive()', () => {
-    it('Should only match properties with positive values')
+    it('Should only match properties with positive values', () => {
+      col.find().where('val').pos().exec().forEach(d => {
+        expect(d.val, 'to be positive')
+      })
+    })
   })
 
   describe('#select()', () => {
-    it('Should select only the requested fields')
-    it('Should only return ids if no fields selected')
+    it('Should select only the requested fields', () => {
+      const r = col.findOne().select('k', 'i').exec()
+      expect(r, 'to only have keys', ['_id', 'k', 'i'])
+    })
+    it('Should only return ids if no fields selected', () => {
+      const r = col.findOne().select().exec()
+      expect(r, 'to only have keys', '_id')
+    })
     it('Should throw an error if id field is included', () => {
       let err
       try {
