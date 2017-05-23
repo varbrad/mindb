@@ -2,7 +2,8 @@
 
 const expect = require('unexpected')
 
-const MinDB = require('../dist/mindb.cjs.js')
+require('ts-node/register')
+const MinDB = require('../src/main').default
 
 describe('MinDB.Collection', () => {
   let col
@@ -193,14 +194,62 @@ describe('MinDB.Collection', () => {
       })
     })
     describe('by Document', () => {
-      it('Should throw error if no id on document')
-      it('Should throw error if id is a non-string')
-      it('Should remove document from the collection')
+      it('Should throw error if no id on document', () => {
+        let err
+        try {
+          col.remove({ data: 327 })
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should throw error if id is a non-string', () => {
+        let err
+        try {
+          col.remove({ _id: [2, 3], data: 'hello' })
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should remove document from the collection', () => {
+        expect(col.list(), 'to be empty')
+        const doc = { _id: 'test', bob: true, data: [1, 2, 3] }
+        col.insert(doc)
+        expect(col.get('test'), 'to be defined')
+        expect(col.list(), 'to have length', 1)
+        col.remove(doc)
+        expect(col.get('test'), 'to be undefined')
+        expect(col.list(), 'to be empty')
+      })
     })
     describe('by Documents', () => {
-      it('Should throw error if no id on a document')
-      it('Should throw error if id is a non-string')
-      it('Should remove the documents from the collection')
+      it('Should throw error if no id on a document', () => {
+        let err
+        try {
+          col.remove([{ _id: 'bob' }, { _id: 'steve' }, { data: 30 }])
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should throw error if an id is a non-string', () => {
+        let err
+        try {
+          col.remove([{ _id: 'dave' }, { _id: 'bob' }, { _id: 827 }, { _id: 'colin' }])
+        } catch (e) {
+          err = e
+        }
+        expect(err, 'to be defined')
+      })
+      it('Should remove the documents from the collection', () => {
+        expect(col.list(), 'to be empty')
+        let docs = [{ _id: 'bob' }, { _id: 'kevin' }, { _id: 'steve' }]
+        docs.forEach(d => col.insert(d))
+        expect(col.list(), 'to have length', 3)
+        col.remove(docs)
+        expect(col.list(), 'to be empty')
+      })
     })
   })
 

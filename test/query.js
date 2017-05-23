@@ -58,15 +58,24 @@ describe('MinDB.Query', () => {
   })
 
   describe('#filter()', () => {
-    it('Should filter documents based on a custom filter')
+    it('Should filter documents based on a custom filter', () => {
+      col.insert({ _id: 'pete', location: 'London' })
+      col.insert({ _id: 'jon', location: 'France' })
+      expect(col.find().filter(d => d.location === 'London').exec(), 'to have length', 1)
+      col.remove(['pete', 'jon'])
+    })
   })
 
   describe('#gt()', () => {
-    it('Should only match properties with values greater than the given value')
+    it('Should only match properties with values greater than the given value', () => {
+      expect(col.list().length, 'to be greater than', col.find().where('data').gt(0.5).count().exec())
+    })
   })
 
   describe('#gte()', () => {
-    it('Should only match properties with values greater than or equal to the given value')
+    it('Should only match properties with values greater than or equal to the given value', () => {
+      expect(col.list().length, 'to be greater than', col.find().where('data').gte(0.5).count().exec())
+    })
   })
 
   describe('#limit(), #one()', () => {
