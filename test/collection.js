@@ -33,6 +33,14 @@ describe('MinDB.Collection', () => {
     expect(col.bonjour, 'to equal', col.get('bonjour'))
   })
 
+  describe('#count()', () => {
+    it('Should create a Query object', () => {
+      const query = col.count()
+      expect(query, 'to be defined')
+      expect(query instanceof MinDB.Query, 'to be true')
+    })
+  })
+
   describe('#empty()', () => {
     it('Should empty the collection', () => {
       col.insert({ _id: 'test', data: 123 })

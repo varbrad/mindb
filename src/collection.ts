@@ -38,6 +38,10 @@ class Collection {
     this._indexes = { [Collection._DEFAULT_INDEX]: new Index(Collection._DEFAULT_INDEX) }
   }
 
+  public count ():Query {
+    return this.find().count()
+  }
+
   public empty ():void {
     this._documents = {}
     Object.keys(this._indexes).forEach(key => {
