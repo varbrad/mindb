@@ -78,6 +78,8 @@
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#comparisonfn" class="tsd-kind-icon">comparison<wbr>Fn</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#createsortdata" class="tsd-kind-icon">create<wbr>Sort<wbr>Data</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#evalcompare" class="tsd-kind-icon">eval<wbr>Compare</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#heapsort" class="tsd-kind-icon">heap<wbr>Sort</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#heapify" class="tsd-kind-icon">heapify</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#insertionsort" class="tsd-kind-icon">insertion<wbr>Sort</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#nestedproperty" class="tsd-kind-icon">nested<wbr>Property</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported"><a href="_utils_.html#quicksort" class="tsd-kind-icon">quick<wbr>Sort</a></li>
@@ -101,7 +103,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L109">utils.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L134">utils.ts:134</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -130,7 +132,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L133">utils.ts:133</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L158">utils.ts:158</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -177,7 +179,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L32">utils.ts:32</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L33">utils.ts:33</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -221,7 +223,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L115">utils.ts:115</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L140">utils.ts:140</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -244,7 +246,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L54">utils.ts:54</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L55">utils.ts:55</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -279,6 +281,85 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="heapsort" class="tsd-anchor"></a>
+					<h3>heap<wbr>Sort</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">heap<wbr>Sort<span class="tsd-signature-symbol">(</span>documents<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span>, sortData<span class="tsd-signature-symbol">: </span><a href="_types_sortdata_.html#sortdata" class="tsd-signature-type">SortData</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L76">utils.ts:76</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>documents: <a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>sortData: <a href="_types_sortdata_.html#sortdata" class="tsd-signature-type">SortData</a><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+					<a name="heapify" class="tsd-anchor"></a>
+					<h3>heapify</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">heapify<span class="tsd-signature-symbol">(</span>documents<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span>, i<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, len<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, compare<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L87">utils.ts:87</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>documents: <a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>i: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>len: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>compare: <span class="tsd-signature-type">function</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>a<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a>, b<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>a: <a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a></h5>
+														</li>
+														<li>
+															<h5>b: <a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="insertionsort" class="tsd-anchor"></a>
 					<h3>insertion<wbr>Sort</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
@@ -288,7 +369,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L64">utils.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L65">utils.ts:65</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -314,7 +395,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L5">utils.ts:5</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L5">utils.ts:5</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -340,7 +421,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L75">utils.ts:75</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L100">utils.ts:100</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -366,7 +447,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L79">utils.ts:79</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L104">utils.ts:104</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -419,7 +500,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L27">utils.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L28">utils.ts:28</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -439,13 +520,13 @@
 					<a name="sortdocuments" class="tsd-anchor"></a>
 					<h3>sort<wbr>Documents</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">sort<wbr>Documents<span class="tsd-signature-symbol">(</span>documents<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span>, sortData<span class="tsd-signature-symbol">: </span><a href="_types_sortdata_.html#sortdata" class="tsd-signature-type">SortData</a><span class="tsd-signature-symbol">[]</span>, algorithm<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">"native"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"quick"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"insertion"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">sort<wbr>Documents<span class="tsd-signature-symbol">(</span>documents<span class="tsd-signature-symbol">: </span><a href="../interfaces/_document_.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">[]</span>, sortData<span class="tsd-signature-symbol">: </span><a href="_types_sortdata_.html#sortdata" class="tsd-signature-type">SortData</a><span class="tsd-signature-symbol">[]</span>, algorithm<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">"native"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"quick"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"insertion"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"heap"</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/313dc2e/src/utils.ts#L18">utils.ts:18</a></li>
+									<li>Defined in <a href="https://github.com/varbrad/mindb/blob/f6ea06b/src/utils.ts#L18">utils.ts:18</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -457,7 +538,7 @@
 									<h5>sortData: <a href="_types_sortdata_.html#sortdata" class="tsd-signature-type">SortData</a><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> algorithm: <span class="tsd-signature-type">"native"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"quick"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"insertion"</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> algorithm: <span class="tsd-signature-type">"native"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"quick"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"insertion"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"heap"</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -532,6 +613,12 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_utils_.html#evalcompare" class="tsd-kind-icon">eval<wbr>Compare</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_utils_.html#heapsort" class="tsd-kind-icon">heap<wbr>Sort</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_utils_.html#heapify" class="tsd-kind-icon">heapify</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_utils_.html#insertionsort" class="tsd-kind-icon">insertion<wbr>Sort</a>

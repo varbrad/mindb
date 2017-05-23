@@ -17,6 +17,9 @@ function sortDocuments(documents, sortData, algorithm) {
         case 'insertion':
             insertionSort(documents, sortData);
             return;
+        case 'heap':
+            heapSort(documents, sortData);
+            return;
         case 'native':
             sort(documents, sortData);
             return;
@@ -70,6 +73,28 @@ function insertionSort(documents, sortData) {
             arraySwap(documents, j, j - 1);
             j--;
         }
+    }
+}
+function heapSort(documents, sortData) {
+    var compare = evalCompare(sortData);
+    var len = documents.length;
+    for (var i = Math.floor(len * .5); i > -1; --i) {
+        heapify(documents, i, len, compare);
+    }for (var _i = documents.length - 1; _i > 0; --_i) {
+        arraySwap(documents, 0, _i);
+        len--;
+        heapify(documents, 0, len, compare);
+    }
+}
+function heapify(documents, i, len, compare) {
+    var l = 2 * i + 1;
+    var r = 2 * i + 2;
+    var largest = i;
+    if (l < len && compare(documents[l], documents[largest]) > 0) largest = l;
+    if (r < len && compare(documents[r], documents[largest]) > 0) largest = r;
+    if (largest !== i) {
+        arraySwap(documents, i, largest);
+        heapify(documents, largest, len, compare);
     }
 }
 function quickSort(documents, sortData) {
@@ -216,7 +241,7 @@ var Index = function () {
         this.name = name;
         this._index = this._collection.values() || [];
         this._sortData = sortData;
-        if (this._sortData) {
+        if (this._index.length > 1 && this._sortData) {
             sortDocuments(this._index, this._sortData);
         }
     }
@@ -766,6 +791,7 @@ var MinDB = function () {
 
         this.Database = Database;
         this.Collection = Collection;
+        this.Index = Index;
         this.Query = Query;
         this._databases = {};
     }

@@ -1,10 +1,12 @@
 import { Database, createDatabaseProxy } from './database';
 import { Collection } from './collection';
+import { Index } from './index';
 import { Query } from './query';
 class MinDB {
     constructor() {
         this.Database = Database;
         this.Collection = Collection;
+        this.Index = Index;
         this.Query = Query;
         this._databases = {};
     }

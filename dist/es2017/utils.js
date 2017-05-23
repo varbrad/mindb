@@ -16,6 +16,9 @@ function sortDocuments(documents, sortData, algorithm) {
         case 'insertion':
             insertionSort(documents, sortData);
             return;
+        case 'heap':
+            heapSort(documents, sortData);
+            return;
         case 'native':
             sort(documents, sortData);
             return;
@@ -70,6 +73,30 @@ function insertionSort(documents, sortData) {
             arraySwap(documents, j, j - 1);
             j--;
         }
+    }
+}
+function heapSort(documents, sortData) {
+    const compare = evalCompare(sortData);
+    let len = documents.length;
+    for (let i = Math.floor(len * .5); i > -1; --i)
+        heapify(documents, i, len, compare);
+    for (let i = documents.length - 1; i > 0; --i) {
+        arraySwap(documents, 0, i);
+        len--;
+        heapify(documents, 0, len, compare);
+    }
+}
+function heapify(documents, i, len, compare) {
+    const l = 2 * i + 1;
+    const r = 2 * i + 2;
+    let largest = i;
+    if (l < len && compare(documents[l], documents[largest]) > 0)
+        largest = l;
+    if (r < len && compare(documents[r], documents[largest]) > 0)
+        largest = r;
+    if (largest !== i) {
+        arraySwap(documents, i, largest);
+        heapify(documents, largest, len, compare);
     }
 }
 function quickSort(documents, sortData) {

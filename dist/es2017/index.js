@@ -5,7 +5,7 @@ class Index {
         this.name = name;
         this._index = this._collection.values() || [];
         this._sortData = sortData;
-        if (this._sortData) {
+        if (this._index.length > 1 && this._sortData) {
             sortDocuments(this._index, this._sortData);
         }
     }
