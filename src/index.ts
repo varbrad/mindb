@@ -2,7 +2,7 @@ import { Document } from './document'
 
 import { SortData } from './types/types'
 
-import { binaryInsert, binarySearch, quickSort } from './utils'
+import { binaryInsert, binarySearch } from './utils'
 
 class Index {
   public name:string
