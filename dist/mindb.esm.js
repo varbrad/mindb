@@ -11,38 +11,48 @@ function nestedProperty(doc, key) {
     return val;
 }
 function sort(documents, sortData) {
-    documents.sort(function (a, b) {
-        return comparisonFn(sortData, a, b);
-    });
+    documents.sort(evalCompare(sortData));
 }
 // This function is quite slow!
-function comparisonFn(sortData, a, b) {
-    var l = sortData.length;
-    for (var i = 0; i < l; ++i) {
-        var _sort = sortData[i];
-        var _a = void 0;
-        var _b = void 0;
-        if (_sort.nested) {
-            _a = nestedProperty(a, _sort.key);
-            _b = nestedProperty(b, _sort.key);
-        } else {
-            _a = a[_sort.key];
-            _b = b[_sort.key];
+function comparisonFn(sortData) {
+    return function (a, b) {
+        var l = sortData.length;
+        for (var i = 0; i < l; ++i) {
+            var _sort = sortData[i];
+            var _a = void 0;
+            var _b = void 0;
+            if (_sort.nested) {
+                _a = nestedProperty(a, _sort.key);
+                _b = nestedProperty(b, _sort.key);
+            } else {
+                _a = a[_sort.key];
+                _b = b[_sort.key];
+            }
+            if (_a !== _b) {
+                return (_a > _b ? 1 : -1) * _sort.order;
+            }
         }
-        if (_a !== _b) {
-            return (_a > _b ? 1 : -1) * _sort.order;
-        }
-    }
-    return 0;
+        return 0;
+    };
+}
+function evalCompare(sortData) {
+    var str = '';
+    sortData.forEach(function (sort) {
+        str += 'if(a.' + sort.key + (sort.order === 1 ? '>' : '<') + 'b.' + sort.key + ')return 1;';
+        str += 'if(a.' + sort.key + (sort.order === 1 ? '<' : '>') + 'b.' + sort.key + ')return -1;';
+    });
+    str += 'return 0;';
+    return Function('a', 'b', str);
 }
 function quickSortFn(docs, left, right, sortData) {
+    var compare = comparisonFn(sortData);
     var iLeft = left;
     var iRight = right;
     var dir = true;
     var pivot = right;
     while (left - right < 0) {
         if (dir) {
-            if (comparisonFn(sortData, docs[pivot], docs[left]) < 0) {
+            if (compare(docs[pivot], docs[left]) < 0) {
                 arraySwap(docs, pivot, left);
                 pivot = left;
                 right--;
@@ -51,7 +61,7 @@ function quickSortFn(docs, left, right, sortData) {
                 left++;
             }
         } else {
-            if (comparisonFn(sortData, docs[pivot], docs[right]) <= 0) {
+            if (compare(docs[pivot], docs[right]) <= 0) {
                 right--;
             } else {
                 arraySwap(docs, pivot, right);
@@ -85,6 +95,7 @@ function createSortData(keys) {
  * @return The index of the item
  */
 function binarySearch(index, document, sortData, lastIndex) {
+    var compare = comparisonFn(sortData);
     var min = 0;
     var max = index.length - 1;
     var i = void 0;
@@ -92,7 +103,7 @@ function binarySearch(index, document, sortData, lastIndex) {
     var comp = void 0;
     while (true) {
         i = min + Math.floor((max - min) / 2);
-        comp = comparisonFn(sortData, document, index[i]);
+        comp = compare(document, index[i]);
         if (comp === 0) return i;
         if (comp > 0) {
             // Move to the right if we can
@@ -568,7 +579,9 @@ var Collection = function () {
                 a.forEach(function (doc) {
                     _this3.remove(doc);
                 });
-            } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object' && '_id' in a) {
+            } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object') {
+                if (!('_id' in a)) throw new Error('The provided document to remove has no \'_id\'.');
+                if (typeof a._id !== 'string') throw new Error('The provided document to remove has a non-string \'_id\'.');
                 // Delete from dictionary
                 delete this._documents[a._id];
                 // Delete from indexes

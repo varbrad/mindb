@@ -12,42 +12,52 @@ function nestedProperty(doc, key) {
     return val;
 }
 function sort(documents, sortData) {
-    documents.sort((a, b) => {
-        return comparisonFn(sortData, a, b);
-    });
+    documents.sort(evalCompare(sortData));
 }
 // This function is quite slow!
-function comparisonFn(sortData, a, b) {
-    const l = sortData.length;
-    for (let i = 0; i < l; ++i) {
-        const sort = sortData[i];
-        let _a;
-        let _b;
-        if (sort.nested) {
-            _a = nestedProperty(a, sort.key);
-            _b = nestedProperty(b, sort.key);
+function comparisonFn(sortData) {
+    return function (a, b) {
+        const l = sortData.length;
+        for (let i = 0; i < l; ++i) {
+            const sort = sortData[i];
+            let _a;
+            let _b;
+            if (sort.nested) {
+                _a = nestedProperty(a, sort.key);
+                _b = nestedProperty(b, sort.key);
+            }
+            else {
+                _a = a[sort.key];
+                _b = b[sort.key];
+            }
+            if (_a !== _b) {
+                return (_a > _b ? 1 : -1) * sort.order;
+            }
         }
-        else {
-            _a = a[sort.key];
-            _b = b[sort.key];
-        }
-        if (_a !== _b) {
-            return (_a > _b ? 1 : -1) * sort.order;
-        }
-    }
-    return 0;
+        return 0;
+    };
+}
+function evalCompare(sortData) {
+    let str = '';
+    sortData.forEach(sort => {
+        str += `if(a.${sort.key}${sort.order === 1 ? '>' : '<'}b.${sort.key})return 1;`;
+        str += `if(a.${sort.key}${sort.order === 1 ? '<' : '>'}b.${sort.key})return -1;`;
+    });
+    str += `return 0;`;
+    return Function('a', 'b', str);
 }
 function quickSort(documents, sortData) {
     quickSortFn(documents, 0, documents.length - 1, sortData);
 }
 function quickSortFn(docs, left, right, sortData) {
+    const compare = comparisonFn(sortData);
     const iLeft = left;
     const iRight = right;
     let dir = true;
     let pivot = right;
     while ((left - right) < 0) {
         if (dir) {
-            if (comparisonFn(sortData, docs[pivot], docs[left]) < 0) {
+            if (compare(docs[pivot], docs[left]) < 0) {
                 arraySwap(docs, pivot, left);
                 pivot = left;
                 right--;
@@ -58,7 +68,7 @@ function quickSortFn(docs, left, right, sortData) {
             }
         }
         else {
-            if (comparisonFn(sortData, docs[pivot], docs[right]) <= 0) {
+            if (compare(docs[pivot], docs[right]) <= 0) {
                 right--;
             }
             else {
@@ -95,6 +105,7 @@ function createSortData(keys) {
  * @return The index of the item
  */
 function binarySearch(index, document, sortData, lastIndex) {
+    const compare = comparisonFn(sortData);
     let min = 0;
     let max = index.length - 1;
     let i;
@@ -102,7 +113,7 @@ function binarySearch(index, document, sortData, lastIndex) {
     let comp;
     while (true) {
         i = min + Math.floor((max - min) / 2);
-        comp = comparisonFn(sortData, document, index[i]);
+        comp = compare(document, index[i]);
         if (comp === 0)
             return i;
         if (comp > 0) {

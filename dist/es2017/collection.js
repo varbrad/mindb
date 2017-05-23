@@ -83,7 +83,11 @@ class Collection {
                 this.remove(doc);
             });
         }
-        else if (typeof a === 'object' && '_id' in a) {
+        else if (typeof a === 'object') {
+            if (!('_id' in a))
+                throw new Error(`The provided document to remove has no '_id'.`);
+            if (typeof a._id !== 'string')
+                throw new Error(`The provided document to remove has a non-string '_id'.`);
             // Delete from dictionary
             delete this._documents[a._id];
             // Delete from indexes
