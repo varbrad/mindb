@@ -1,8 +1,9 @@
 /* global describe, it, beforeEach */
+require('ts-node/register')
 
 const expect = require('unexpected')
 
-const MinDB = require('../dist/mindb.cjs.js')
+const MinDB = require('../src/main').default
 
 describe('MinDB', () => {
   beforeEach(() => {
