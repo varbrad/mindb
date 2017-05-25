@@ -51,6 +51,13 @@ describe('MinDB.Collection', () => {
     })
   })
 
+  describe('#exportJSON()', () => {
+    it('Should export a string', () => {
+      col.insert({ _id: 'dog', meme: true })
+      expect(col.exportJSON(), 'to be a string')
+    })
+  })
+
   describe('#find()', () => {
     it('Should create a Query object', () => {
       const query = col.find()
@@ -101,6 +108,60 @@ describe('MinDB.Collection', () => {
 
     it('Should return "undefined" for a non-existant id', () => {
       expect(col.get('not-found'), 'to be undefined')
+    })
+  })
+
+  describe('#importJSON()', () => {
+    it('Should re-construct identical collection', () => {
+      for (let i = 0; i < 20; ++i) col.insert({ _id: 'doc' + i, value: Math.random() })
+      const vals = col.values().slice()
+      const json = col.exportJSON()
+      col.empty()
+      expect(col.values(), 'to be empty')
+      col.importJSON(json)
+      expect(col.values(), 'to have length', 20)
+      expect(col.values(), 'to equal', vals)
+    })
+
+    it('Should overwrite if flag set', () => {
+      col.insert({ _id: 'a', bob: true })
+      const json = col.exportJSON()
+      col.upsert({ _id: 'a', steve: 289 })
+      col.importJSON(json, true)
+      expect(col.get('a'), 'to have key', 'bob')
+      expect(col.get('a').bob, 'to be', true)
+      expect(col.get('a'), 'not to have key', 'steve')
+    })
+
+    it('Should throw error if not given anything', () => {
+      let err
+      try {
+        col.importJSON()
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+
+    it('Should throw error if invalid json string', () => {
+      let err
+      try {
+        col.importJSON('[ data: 123, p: 2, }]')
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
+    })
+
+    it('Should throw error if overwrite not allowed', () => {
+      col.insert({ _id: 'data', value: 40 })
+      let err
+      try {
+        col.importJSON(col.exportJSON())
+      } catch (e) {
+        err = e
+      }
+      expect(err, 'to be defined')
     })
   })
 

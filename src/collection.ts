@@ -74,7 +74,13 @@ class Collection {
   }
 
   public importJSON (json:string, overwrite:boolean = false):void {
-    const o = JSON.parse(json)
+    if (json === undefined) throw new Error(`No json string was provided to import.`)
+    let o
+    try {
+      o = JSON.parse(json)
+    } catch (e) {
+      throw new Error(`Unable to parse the given json string.`)
+    }
     o.forEach(doc => {
       this.insert(doc, overwrite)
     })
