@@ -49,6 +49,10 @@ class Collection {
     })
   }
 
+  public exportJSON ():string {
+    return JSON.stringify(this.values())
+  }
+
   public find ():Query {
     return new Query(this)
   }
@@ -67,6 +71,13 @@ class Collection {
     if (id in this._documents) return this._documents[id]
     // Else return undefined, don't throw an error
     return undefined
+  }
+
+  public importJSON (json:string, overwrite:boolean = false):void {
+    const o = JSON.parse(json)
+    o.forEach(doc => {
+      this.insert(doc, overwrite)
+    })
   }
 
   public index (...keys:string[]):void {

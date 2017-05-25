@@ -38,6 +38,20 @@ class Database {
     return col
   }
 
+  public exportJSON ():string {
+    const o = {
+      collections: []
+    }
+    // For every collection
+    Object.keys(this._collections).map(key => this._collections[key]).forEach(clx => {
+      o.collections.push({
+        name: clx.name,
+        values: clx.values()
+      })
+    })
+    return JSON.stringify(o)
+  }
+
   public get (name:string):Collection {
     // Check the name is actually a string
     if (typeof name !== 'string') throw new Error(`The collection name must be a "string", "not a "${typeof name}".`)
@@ -45,6 +59,14 @@ class Database {
     if (name in this._collections) return this._collections[name]
     // Else throw an error
     throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this.name}'.`)
+  }
+
+  public importJSON (json:string, overwrite:boolean = false):void {
+    const o = JSON.parse(json)
+    o.collections.forEach(clxData => {
+      const clx = this.get(clxData.name)
+      clxData.values.forEach(doc => clx.insert(doc, overwrite))
+    })
   }
 
   public list ():string[] {
