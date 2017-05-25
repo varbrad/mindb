@@ -18,6 +18,9 @@ class Collection {
             this._indexes[key].empty();
         });
     }
+    exportJSON() {
+        return JSON.stringify(this.values());
+    }
     find() {
         return new Query(this);
     }
@@ -39,6 +42,20 @@ class Collection {
             return this._documents[id];
         // Else return undefined, don't throw an error
         return undefined;
+    }
+    importJSON(json, overwrite = false) {
+        if (json === undefined)
+            throw new Error(`No json string was provided to import.`);
+        let o;
+        try {
+            o = JSON.parse(json);
+        }
+        catch (e) {
+            throw new Error(`Unable to parse the given json string.`);
+        }
+        o.forEach(doc => {
+            this.insert(doc, overwrite);
+        });
     }
     index(...keys) {
         const sortData = createSortData(keys);

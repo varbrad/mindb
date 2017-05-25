@@ -592,6 +592,11 @@ var Collection = function () {
             });
         }
     }, {
+        key: 'exportJSON',
+        value: function exportJSON() {
+            return JSON.stringify(this.values());
+        }
+    }, {
         key: 'find',
         value: function find() {
             return new Query(this);
@@ -614,6 +619,24 @@ var Collection = function () {
             return undefined;
         }
     }, {
+        key: 'importJSON',
+        value: function importJSON(json) {
+            var _this2 = this;
+
+            var overwrite = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (json === undefined) throw new Error('No json string was provided to import.');
+            var o = void 0;
+            try {
+                o = JSON.parse(json);
+            } catch (e) {
+                throw new Error('Unable to parse the given json string.');
+            }
+            o.forEach(function (doc) {
+                _this2.insert(doc, overwrite);
+            });
+        }
+    }, {
         key: 'index',
         value: function index() {
             for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
@@ -629,7 +652,7 @@ var Collection = function () {
     }, {
         key: 'insert',
         value: function insert(document) {
-            var _this2 = this;
+            var _this3 = this;
 
             var overwrite = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
@@ -653,7 +676,7 @@ var Collection = function () {
             this._documents[document._id] = document;
             // Add the document to all indexes
             Object.keys(this._indexes).forEach(function (key) {
-                _this2._indexes[key].insert(document);
+                _this3._indexes[key].insert(document);
             });
             // Return the document
             return document;
@@ -666,12 +689,12 @@ var Collection = function () {
     }, {
         key: 'remove',
         value: function remove(a) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (!a) throw new Error('No argument provided to remove from collection.');
             if (Array.isArray(a)) {
                 a.forEach(function (doc) {
-                    _this3.remove(doc);
+                    _this4.remove(doc);
                 });
             } else if ((typeof a === 'undefined' ? 'undefined' : _typeof(a)) === 'object') {
                 if (!('_id' in a)) throw new Error('The provided document to remove has no \'_id\'.');
@@ -680,7 +703,7 @@ var Collection = function () {
                 delete this._documents[a._id];
                 // Delete from indexes
                 Object.keys(this._indexes).forEach(function (key) {
-                    _this3._indexes[key].remove(a);
+                    _this4._indexes[key].remove(a);
                 });
             } else if (typeof a === 'string') {
                 var doc = this.get(a);
@@ -754,6 +777,25 @@ var Database = function () {
             return col;
         }
     }, {
+        key: 'exportJSON',
+        value: function exportJSON() {
+            var _this = this;
+
+            var o = {
+                collections: []
+            };
+            // For every collection
+            Object.keys(this._collections).map(function (key) {
+                return _this._collections[key];
+            }).forEach(function (clx) {
+                o.collections.push({
+                    name: clx.name,
+                    values: clx.values()
+                });
+            });
+            return JSON.stringify(o);
+        }
+    }, {
         key: 'get',
         value: function get$$1(name) {
             // Check the name is actually a string
@@ -762,6 +804,21 @@ var Database = function () {
             if (name in this._collections) return this._collections[name];
             // Else throw an error
             throw new Error('Collection name \'' + name + '\' has not been created and does not exist on database \'' + this.name + '\'.');
+        }
+    }, {
+        key: 'importJSON',
+        value: function importJSON(json) {
+            var _this2 = this;
+
+            var overwrite = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            var o = JSON.parse(json);
+            o.collections.forEach(function (clxData) {
+                var clx = _this2.get(clxData.name);
+                clxData.values.forEach(function (doc) {
+                    return clx.insert(doc, overwrite);
+                });
+            });
         }
     }, {
         key: 'list',

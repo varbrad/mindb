@@ -23,6 +23,19 @@ class Database {
         // Return the collection ref
         return col;
     }
+    exportJSON() {
+        const o = {
+            collections: []
+        };
+        // For every collection
+        Object.keys(this._collections).map(key => this._collections[key]).forEach(clx => {
+            o.collections.push({
+                name: clx.name,
+                values: clx.values()
+            });
+        });
+        return JSON.stringify(o);
+    }
     get(name) {
         // Check the name is actually a string
         if (typeof name !== 'string')
@@ -32,6 +45,13 @@ class Database {
             return this._collections[name];
         // Else throw an error
         throw new Error(`Collection name '${name}' has not been created and does not exist on database '${this.name}'.`);
+    }
+    importJSON(json, overwrite = false) {
+        const o = JSON.parse(json);
+        o.collections.forEach(clxData => {
+            const clx = this.get(clxData.name);
+            clxData.values.forEach(doc => clx.insert(doc, overwrite));
+        });
     }
     list() {
         return Object.keys(this._collections);
