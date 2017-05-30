@@ -57,6 +57,8 @@ function comparisonFn(sortData) {
 function evalCompare(sortData) {
     var str = '';
     sortData.forEach(function (sort) {
+        str += 'if(a.' + sort.key + '!==undefined&&b.' + sort.key + '===undefined)return ' + (sort.order === 1 ? '1' : '-1') + ';';
+        str += 'if(a.' + sort.key + '===undefined&&b.' + sort.key + '!==undefined)return ' + (sort.order === 1 ? '-1' : '1') + ';';
         str += 'if(a.' + sort.key + (sort.order === 1 ? '>' : '<') + 'b.' + sort.key + ')return 1;';
         str += 'if(a.' + sort.key + (sort.order === 1 ? '<' : '>') + 'b.' + sort.key + ')return -1;';
     });
