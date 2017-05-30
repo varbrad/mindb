@@ -55,6 +55,8 @@ function comparisonFn (sortData:SortData[]):((a:Document, b:Document) => number)
 function evalCompare (sortData:SortData[]):((a:Document, b:Document) => number) {
   let str = ''
   sortData.forEach(sort => {
+    str += `if(a.${sort.key}!==undefined&&b.${sort.key}===undefined)return ${sort.order === 1 ? '1' : '-1'};`
+    str += `if(a.${sort.key}===undefined&&b.${sort.key}!==undefined)return ${sort.order === 1 ? '-1' : '1'};`
     str += `if(a.${sort.key}${sort.order === 1 ? '>' : '<'}b.${sort.key})return 1;`
     str += `if(a.${sort.key}${sort.order === 1 ? '<' : '>'}b.${sort.key})return -1;`
   })
